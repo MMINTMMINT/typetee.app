@@ -1,0 +1,148 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&family=Pixelify+Sans:wght@400;500;600;700&display=swap');
+
+/* Commodore 64 font - using a close approximation with system fonts */
+@font-face {
+  font-family: 'Commodore 64 Pixelized';
+  src: local('Courier New'), local('Courier'), local('monospace');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@layer base {
+  * {
+    @apply border-terminal-black dark:border-terminal-white;
+  }
+  
+  body {
+    @apply font-pressStart;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+    font-smooth: never;
+    text-rendering: optimizeSpeed;
+    transform: translate3d(0, 0, 0);
+  }
+  
+  * {
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+    font-smooth: never;
+    text-rendering: optimizeSpeed;
+  }
+  
+  h1, h2, h3, h4, h5, h6, p, span, a, button, label, div {
+    text-rendering: optimizeSpeed;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+}
+
+@layer components {
+  .retro-button {
+    @apply px-8 py-4 font-bold uppercase tracking-wider border-[6px] transition-all;
+    letter-spacing: 0.15em;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+    font-smooth: never;
+    text-rendering: optimizeSpeed;
+    font-family: 'Commodore 64 Pixelized', monospace;
+    font-size: 18px;
+    font-weight: 900;
+    line-height: 1.2;
+  }
+  
+  .retro-button-black {
+    @apply bg-terminal-black text-terminal-white border-terminal-white;
+  }
+  
+  .retro-button-black:active,
+  .retro-button-black.active {
+    @apply bg-terminal-white text-terminal-black;
+  }
+  
+  .retro-button-white {
+    @apply bg-terminal-white text-terminal-black border-terminal-black;
+  }
+  
+  .retro-button-white:active,
+  .retro-button-white.active {
+    @apply bg-terminal-black text-terminal-white;
+  }
+  
+  .retro-input {
+    @apply w-full px-6 py-4 font-mono text-lg border-[6px];
+    @apply focus:outline-none focus:ring-[6px];
+    font-family: 'Press Start 2P', monospace;
+    letter-spacing: 0.05em;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+    font-smooth: never;
+    line-height: 1.8;
+    text-rendering: optimizeSpeed;
+  }
+  
+  .retro-input-black {
+    @apply bg-terminal-black text-terminal-white border-terminal-white;
+    @apply placeholder-terminal-white/50 focus:ring-terminal-white/30;
+  }
+  
+  .retro-input-white {
+    @apply bg-terminal-white text-terminal-black border-terminal-black;
+    @apply placeholder-terminal-black/50 focus:ring-terminal-black/30;
+  }
+  
+  .retro-panel {
+    @apply border-[6px] p-8;
+    text-rendering: optimizeSpeed;
+  }
+  
+  .retro-panel-black {
+    @apply bg-terminal-black border-terminal-white;
+  }
+  
+  .retro-panel-white {
+    @apply bg-terminal-white border-terminal-black;
+  }
+  
+  .blink-cursor::after {
+    content: '█';
+    @apply animate-blink ml-1;
+  }
+}
+
+@layer utilities {
+  .text-stroke {
+    -webkit-text-stroke: 1px currentColor;
+  }
+  
+  .chunky-border {
+    border-width: 6px;
+    border-style: solid;
+  }
+  
+  .pixelated {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+    font-smooth: never;
+  }
+  
+  canvas {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+  }
+  
+  input[type="range"] {
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
