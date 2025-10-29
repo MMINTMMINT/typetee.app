@@ -5,9 +5,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2024-10-28.acacia',
 })
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const body = await request.json()
+    const body = await request.json() as Record<string, unknown>
     const {
       shirtColor,
       size,
@@ -18,11 +18,29 @@ export async function POST(request: NextRequest) {
       textSize,
       placement,
       shippingInfo,
-    } = body
+    } = body as {
+      shirtColor: string
+      size: string
+      mode: string
+      text: string
+      asciiArt: string
+      font: string
+      textSize: number
+      placement: string
+      shippingInfo: {
+        email: string
+        name: string
+        address: string
+        city: string
+        state: string
+        zip: string
+        country: string
+      }
+    }
     
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
+      payment_method_types: ['card'] as const,
       line_items: [
         {
           price_data: {
@@ -59,10 +77,11 @@ export async function POST(request: NextRequest) {
     })
     
     return NextResponse.json({ sessionId: session.id })
-  } catch (error: any) {
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     console.error('Stripe error:', error)
     return NextResponse.json(
-      { error: error.message },
+      { error: errorMessage },
       { status: 500 }
     )
   }
