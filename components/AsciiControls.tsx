@@ -41,9 +41,9 @@ export function AsciiControls() {
       return
     }
     
-    // Check file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      alert('Image too large. Maximum size is 10MB')
+    // Check file size (max 50MB for mobile camera uploads)
+    if (file.size > 50 * 1024 * 1024) {
+      alert('Image too large. Maximum size is 50MB')
       return
     }
     
@@ -87,7 +87,8 @@ export function AsciiControls() {
             const ctx = canvas.getContext('2d')
             if (ctx) {
               ctx.drawImage(img, 0, 0, newWidth, newHeight)
-              dataUrl = canvas.toDataURL('image/jpeg', 0.9)
+              // Use lower quality compression for mobile uploads to reduce file size
+              dataUrl = canvas.toDataURL('image/jpeg', 0.85)
             }
           }
           
@@ -226,14 +227,13 @@ export function AsciiControls() {
       
       {/* ASCII Preview */}
       {asciiArt && (
-        <div className="flex flex-col flex-1">
+        <div className="flex flex-col">
           <label className="block font-bold mb-3 text-[10px] leading-relaxed">PREVIEW:</label>
           <div 
-            className={`${inputClass.replace('retro-input', 'retro-panel')} overflow-auto flex items-center justify-center flex-1 w-full`}
-            style={artworkAspectRatio ? { aspectRatio: artworkAspectRatio } : {}}
+            className={`${inputClass.replace('retro-input', 'retro-panel')} overflow-x-auto`}
           >
             <pre 
-              className="font-mono text-[6px] leading-[6px] w-full h-full flex items-center justify-center"
+              className="font-mono text-[6px] leading-[6px] whitespace-pre inline-block min-w-full"
             >
               {asciiArt}
             </pre>
