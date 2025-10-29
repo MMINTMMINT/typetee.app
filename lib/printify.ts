@@ -2,8 +2,6 @@ import axios from 'axios'
 import { generateDesignImage } from './imageGenerator'
 
 const PRINTIFY_API_URL = 'https://api.printify.com/v1'
-const PRINTIFY_API_KEY = process.env.PRINTIFY_API_KEY!
-const PRINTIFY_SHOP_ID = process.env.PRINTIFY_SHOP_ID!
 
 interface OrderData {
   shirtColor: string
@@ -27,6 +25,14 @@ interface OrderData {
 
 export async function createPrintifyOrder(orderData: OrderData) {
   try {
+    // Get environment variables at runtime
+    const PRINTIFY_API_KEY = process.env.PRINTIFY_API_KEY
+    const PRINTIFY_SHOP_ID = process.env.PRINTIFY_SHOP_ID
+    
+    if (!PRINTIFY_API_KEY || !PRINTIFY_SHOP_ID) {
+      throw new Error('Missing Printify configuration')
+    }
+    
     // Generate print-ready design image (4606x5787px)
     const designImageUrl = await generateDesignImage(orderData)
     
