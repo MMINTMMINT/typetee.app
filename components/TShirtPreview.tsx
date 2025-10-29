@@ -55,8 +55,8 @@ export function TShirtPreview() {
       }
       const lines = croppedRows.map((row) => row.slice(leftCol, rightCol + 1))
     
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
+    const ctx = canvas?.getContext('2d')
+    if (!ctx || !canvas) return
     
     // Set canvas size based on mode
     let displayWidth: number

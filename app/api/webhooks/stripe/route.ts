@@ -4,7 +4,7 @@ import { sendOrderConfirmationEmail } from '@/lib/email'
 import { createPrintifyOrder } from '@/lib/printify'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-10-28.acacia',
+  apiVersion: '2025-02-24.acacia',
 })
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
