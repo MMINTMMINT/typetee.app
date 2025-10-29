@@ -16,8 +16,8 @@ export function DesignStudio() {
   return (
     <div className={`${bgColor} ${textColor} transition-colors duration-300`}>
       {/* Header - Fixed */}
-      <header className="border-b-[6px] border-current p-4 fixed top-0 left-0 right-0 z-50">
-        <div className="flex items-center justify-between px-4">
+      <header className="border-b-[6px] border-current p-2 sm:p-4 fixed top-0 left-0 right-0 z-50">
+        <div className="flex items-center justify-between px-2 sm:px-4">
           <PixelLogo />
           <ThemeToggle />
         </div>

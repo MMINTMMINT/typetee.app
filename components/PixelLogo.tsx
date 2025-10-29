@@ -152,7 +152,7 @@ export function PixelLogo() {
       className="pixelated"
       style={{
         imageRendering: 'pixelated',
-        height: '32px',
+        height: 'clamp(16px, 5vw, 32px)',
         width: 'auto',
       }}
     />

@@ -2,12 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&family=Pixelify+Sans:wght@400;500;600;700&display=swap');
+/* Press Start 2P - Local font file */
+@font-face {
+  font-family: 'Press Start 2P';
+  src: url('/fonts/PressStart2P-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
 
-/* Commodore 64 font - using a close approximation with system fonts */
+/* VT323 - System font */
+@font-face {
+  font-family: 'VT323';
+  src: local('VT323'), local('VT323 Regular');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* Commodore 64 Pixelized - System font */
 @font-face {
   font-family: 'Commodore 64 Pixelized';
-  src: local('Courier New'), local('Courier'), local('monospace');
+  src: local('Commodore 64 Pixelized'), local('Commodore Pixelized v1.2');
   font-weight: normal;
   font-style: normal;
 }
@@ -18,7 +32,7 @@
   }
   
   body {
-    @apply font-pressStart;
+    font-family: 'Press Start 2P', monospace;
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
@@ -46,14 +60,14 @@
 @layer components {
   .retro-button {
     @apply px-8 py-4 font-bold uppercase tracking-wider border-[6px] transition-all;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.05em;
     -webkit-font-smoothing: none;
     -moz-osx-font-smoothing: grayscale;
     font-smooth: never;
     text-rendering: optimizeSpeed;
-    font-family: 'Commodore 64 Pixelized', monospace;
-    font-size: 18px;
-    font-weight: 900;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    font-weight: normal;
     line-height: 1.2;
   }
   
@@ -85,6 +99,9 @@
     font-smooth: never;
     line-height: 1.8;
     text-rendering: optimizeSpeed;
+    font-size: 12px;
+    font-weight: normal;
+    caret-color: transparent;
   }
   
   .retro-input-black {

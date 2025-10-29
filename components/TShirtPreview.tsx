@@ -91,9 +91,13 @@ export function TShirtPreview() {
         displayWidth = maxHeight * artworkRatio
       }
     } else {
-      // For text mode: use fixed print area ratio
-      displayWidth = 230
-      displayHeight = 289
+      // For text mode: use same print area ratio as ASCII (4606 x 5787)
+      const printAreaRatio = 4606 / 5787
+      const maxWidth = 460
+      const maxHeight = 579
+      // Text uses full print area
+      displayWidth = maxWidth
+      displayHeight = maxHeight
     }
     
     canvas.width = displayWidth
@@ -120,81 +124,75 @@ export function TShirtPreview() {
       } else {
         ctx.textAlign = 'right'
       }
-      ctx.textBaseline = 'middle'
+      ctx.textBaseline = 'top'
       
-      // Calculate optimal font size at textSize = 1 to fit container
+      // Calculate font size based on textSize scale
       let fontSize: number
       
-      if (textSize === 1) {
-        // Size 1: Fit text to container - start with a test size
-        const testSize = displayHeight * 0.8 // Start with 80% of height
-        ctx.font = `900 ${testSize}px ${fontMap[font]}`
-        
-        // Word wrap to get lines
-        const words = text.split(' ')
-        const lines: string[] = []
-        let currentLine = words[0]
-        const maxWidth = displayWidth - 40
-        
-        for (let i = 1; i < words.length; i++) {
-          const testLine = currentLine + ' ' + words[i]
-          const metrics = ctx.measureText(testLine)
-          if (metrics.width > maxWidth) {
-            lines.push(currentLine)
-            currentLine = words[i]
-          } else {
-            currentLine = testLine
-          }
-        }
-        lines.push(currentLine)
-        
-        // Calculate size to fit height
-        const lineHeight = testSize * 1.5
-        const totalHeight = lines.length * lineHeight
-        const fontSizeByHeight = (displayHeight * 0.9 * testSize) / totalHeight
-        
-        // Calculate size to fit width
-        let maxLineWidth = 0
-        lines.forEach(line => {
-          const metrics = ctx.measureText(line)
-          maxLineWidth = Math.max(maxLineWidth, metrics.width)
-        })
-        const fontSizeByWidth = (maxWidth * testSize) / maxLineWidth
-        
-        // Use smaller size to fit both dimensions
-        fontSize = Math.min(fontSizeByHeight, fontSizeByWidth, testSize)
-        fontSize = Math.max(fontSize, 10) // Minimum 10px
-      } else {
-        // Sizes 2-10: Scale from base size
-        fontSize = textSize * 14
-      }
+      // Base sizing: textSize * 14 (size 2 = 28px, size 3 = 42px, etc)
+      // Size 1 should be smaller than size 2
+      fontSize = textSize * 14
+      
+      // Ensure size stays within reasonable bounds
+      fontSize = Math.max(fontSize, 12) // Minimum 12px
+      fontSize = Math.min(fontSize, 180) // Maximum 180px
       
       ctx.font = `900 ${fontSize}px ${fontMap[font]}` // Weight 900 for extra bold
       
-      // Word wrap for long text
-      const words = text.split(' ')
+      // Process text: split by newlines first, then wrap each line
+      const inputLines = text.split('\n')
       const lines: string[] = []
-      let currentLine = words[0]
+      const maxWidth = displayWidth - 40 // Padding (20px left + 20px right)
       
-      const maxWidth = displayWidth - 40 // Padding
-      
-      for (let i = 1; i < words.length; i++) {
-        const testLine = currentLine + ' ' + words[i]
-        const metrics = ctx.measureText(testLine)
-        if (metrics.width > maxWidth) {
+      for (const inputLine of inputLines) {
+        // For each input line, apply word wrapping
+        if (inputLine.trim() === '') {
+          // Empty line
+          lines.push('')
+          continue
+        }
+        
+        const words = inputLine.split(' ')
+        let currentLine = ''
+        
+        for (const word of words) {
+          if (currentLine === '') {
+            // Start a new line with this word
+            currentLine = word
+          } else {
+            // Try adding word to current line
+            const testLine = currentLine + ' ' + word
+            const testWidth = ctx.measureText(testLine).width
+            
+            if (testWidth <= maxWidth) {
+              // Fits!
+              currentLine = testLine
+            } else {
+              // Doesn't fit - push current line and start new one
+              if (currentLine.length > 0) {
+                lines.push(currentLine)
+              }
+              currentLine = word
+            }
+          }
+        }
+        
+        // Push remaining text
+        if (currentLine.length > 0) {
           lines.push(currentLine)
-          currentLine = words[i]
-        } else {
-          currentLine = testLine
         }
       }
-      lines.push(currentLine)
       
       // Draw lines with proper alignment and extra blocky rendering
-      const lineHeight = fontSize * 1.5
-      const startY = (displayHeight - lines.length * lineHeight) / 2
+      const lineHeight = fontSize * 1.1
+      const startY = 20 // Top-aligned with padding
+      const maxHeight = displayHeight - 20 // Bottom padding
       
       lines.forEach((line, i) => {
+        const yPos = startY + i * lineHeight
+        // Stop drawing if text would exceed bottom boundary
+        if (yPos > maxHeight) return
+        
         let xPos: number
         if (textAlign === 'left') {
           xPos = 20
@@ -205,9 +203,9 @@ export function TShirtPreview() {
         }
         
         // Draw text multiple times slightly offset for extra bold blocky effect
-        ctx.fillText(line, xPos, startY + i * lineHeight)
-        ctx.fillText(line, xPos + 0.5, startY + i * lineHeight)
-        ctx.fillText(line, xPos, startY + i * lineHeight + 0.5)
+        ctx.fillText(line, xPos, yPos)
+        ctx.fillText(line, xPos + 0.5, yPos)
+        ctx.fillText(line, xPos, yPos + 0.5)
       })
   } else if (mode === 'ascii' && asciiArt) {
       ctx.imageSmoothingEnabled = false
@@ -268,7 +266,7 @@ export function TShirtPreview() {
         {/* T-Shirt Image */}
         <div className="relative">
           <img
-            src={placement === 'front' ? '/front.png' : '/back.png'}
+            src={placement === 'front' ? '/front.webp' : '/back.webp'}
             alt={`T-Shirt ${placement}`}
             className="w-full h-auto pixelated"
             style={{
