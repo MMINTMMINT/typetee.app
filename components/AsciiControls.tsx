@@ -53,26 +53,61 @@ export function AsciiControls() {
       // Read image as data URL
       const reader = new FileReader()
       reader.onload = async (event) => {
-        const dataUrl = event.target?.result as string
-        setUploadedImage(dataUrl)
+        let dataUrl = event.target?.result as string
         
-        // Calculate aspect ratio from image
+        // Resize image if needed
         const img = new Image()
-        img.onload = () => {
-          const ratio = img.height / img.width
-          setArtworkAspectRatio(ratio)
+        img.onload = async () => {
+          // Define max dimensions for Printify print area (4606 x 5787)
+          const MAX_WIDTH = 4606
+          const MAX_HEIGHT = 5787
+          
+          // Check if image needs resizing
+          if (img.width > MAX_WIDTH || img.height > MAX_HEIGHT) {
+            // Calculate new dimensions while maintaining aspect ratio
+            let newWidth = img.width
+            let newHeight = img.height
+            
+            if (img.width > MAX_WIDTH) {
+              const ratio = MAX_WIDTH / img.width
+              newWidth = MAX_WIDTH
+              newHeight = Math.floor(img.height * ratio)
+            }
+            
+            if (newHeight > MAX_HEIGHT) {
+              const ratio = MAX_HEIGHT / newHeight
+              newHeight = MAX_HEIGHT
+              newWidth = Math.floor(newWidth * ratio)
+            }
+            
+            // Create canvas and resize
+            const canvas = document.createElement('canvas')
+            canvas.width = newWidth
+            canvas.height = newHeight
+            const ctx = canvas.getContext('2d')
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, newWidth, newHeight)
+              dataUrl = canvas.toDataURL('image/jpeg', 0.9)
+            }
+          }
+          
+          setUploadedImage(dataUrl)
+          
+          // Calculate aspect ratio from resized image
+          const aspectRatio = img.height / img.width
+          setArtworkAspectRatio(aspectRatio)
+          
+          // Convert to ASCII
+          const ascii = await convertImageToAscii(dataUrl, asciiDensity)
+          setAsciiArt(ascii)
+          setIsProcessing(false)
+          
+          // Play upload complete sound
+          if (soundEnabled) {
+            sounds.uploadComplete()
+          }
         }
         img.src = dataUrl
-        
-        // Convert to ASCII
-        const ascii = await convertImageToAscii(dataUrl, asciiDensity)
-        setAsciiArt(ascii)
-        setIsProcessing(false)
-        
-        // Play upload complete sound
-        if (soundEnabled) {
-          sounds.uploadComplete()
-        }
       }
       reader.readAsDataURL(file)
     } catch (error) {
