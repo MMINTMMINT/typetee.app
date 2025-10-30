@@ -48,7 +48,7 @@ export function ThemeToggle() {
       {/* Mobile Version - Minimal diagonal toggle */}
       <button
         onClick={() => handleThemeChange(theme === 'black' ? 'white' : 'black')}
-        className="sm:hidden w-12 h-12 border-[4px] transition-all flex items-center justify-center relative overflow-hidden"
+        className="sm:hidden w-8 h-8 border-[2px] sm:border-[4px] transition-all flex items-center justify-center relative overflow-hidden"
         style={{
           borderColor: theme === 'black' ? '#FFFFFF' : '#000000',
           background: `linear-gradient(135deg, #000000 50%, #FFFFFF 50%)`,

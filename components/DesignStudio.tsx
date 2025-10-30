@@ -17,10 +17,10 @@ export function DesignStudio() {
   return (
     <div className={`${bgColor} ${textColor} transition-colors duration-300`}>
       {/* Header - Fixed */}
-      <header className="border-b-[6px] border-current p-2 sm:p-4 fixed top-0 left-0 right-0 z-50">
-        <div className="flex items-center justify-between px-2 sm:px-4">
+      <header className="border-b-[4px] sm:border-b-[6px] border-current p-1 sm:p-4 fixed top-0 left-0 right-0 z-50">
+        <div className="flex items-center justify-between px-1 sm:px-4 gap-2">
           <PixelLogo />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
             <SoundToggle />
             <ThemeToggle />
           </div>
@@ -28,7 +28,7 @@ export function DesignStudio() {
       </header>
       
       {/* Main Content - Below fixed header */}
-      <div className="pt-24">
+      <div className="pt-16 sm:pt-24">
         <div className="flex flex-col lg:flex-row gap-8 p-4 md:p-8">
           {/* Left: Design Controls - Scrollable with Checkout Button */}
           <div className="flex-1 overflow-y-auto flex flex-col max-h-[calc(100vh-6rem)]">

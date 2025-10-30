@@ -21,10 +21,11 @@ export function SoundToggle() {
   return (
     <button
       onClick={handleToggle}
-      className={`${buttonClass} retro-button p-2 w-12 h-12 flex items-center justify-center`}
+      className="p-0 w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0"
       aria-label={soundEnabled ? 'Sound On' : 'Sound Off'}
+      style={{ background: 'transparent', border: 'none' }}
     >
-      <div className="relative w-6 h-6">
+      <div className="relative w-6 h-6 sm:w-7 sm:h-7" style={{ color: theme === 'black' ? '#FFFFFF' : '#000000' }}>
         {soundEnabled ? <SoundOnIcon /> : <SoundOffIcon />}
       </div>
     </button>
