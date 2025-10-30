@@ -100,8 +100,13 @@ export function TShirtPreview() {
       displayHeight = maxHeight
     }
     
-    canvas.width = displayWidth
-    canvas.height = displayHeight
+    // Scale up canvas resolution for sharper rendering (2x internal resolution)
+    const dpr = 2 // Device pixel ratio
+    canvas.width = displayWidth * dpr
+    canvas.height = displayHeight * dpr
+    
+    // Scale the context to match the CSS size
+    ctx.scale(dpr, dpr)
     
     // Enable pixelated rendering - disable smoothing
     ctx.imageSmoothingEnabled = false
