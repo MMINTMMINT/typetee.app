@@ -26,6 +26,71 @@
   font-style: normal;
 }
 
+/* ASCII Style Fonts */
+@font-face {
+  font-family: 'Courier New';
+  src: url('/fonts/CourierNew-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'DejaVu Sans Mono';
+  src: url('/fonts/DejaVuSansMono.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Menlo';
+  src: url('/fonts/Menlo-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Liberation Mono';
+  src: url('/fonts/LiberationMono-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-VariableFont_wght.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Monaco';
+  src: url('/fonts/Monaco.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Courier Prime';
+  src: url('/fonts/CourierPrime-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Noto Sans Mono';
+  src: url('/fonts/NotoSansMono-VariableFont_wdth,wght.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   * {
     @apply border-terminal-black dark:border-terminal-white;
@@ -69,6 +134,46 @@
     font-size: 12px;
     font-weight: normal;
     line-height: 1.2;
+  }
+  
+  .retro-button.style-button {
+    font-family: monospace !important;
+  }
+  
+  .style-standard {
+    font-family: monospace !important;
+  }
+  
+  .style-lineArt {
+    font-family: 'Courier New', monospace !important;
+  }
+  
+  .style-solid {
+    font-family: 'JetBrains Mono', monospace !important;
+  }
+  
+  .style-shaded {
+    font-family: 'Menlo', monospace !important;
+  }
+  
+  .style-oldschool {
+    font-family: 'Liberation Mono', monospace !important;
+  }
+  
+  .style-newschool {
+    font-family: 'DejaVu Sans Mono', monospace !important;
+  }
+  
+  .style-irc {
+    font-family: 'Monaco', monospace !important;
+  }
+  
+  .style-typewriter {
+    font-family: 'Courier Prime', monospace !important;
+  }
+  
+  .style-emoticon {
+    font-family: 'Noto Sans Mono', monospace !important;
   }
   
   .retro-button-black {

@@ -46,7 +46,6 @@ cd typetee.app
 ```bash
 npm install
 ```
-
 3. Set up environment variables:
 ```bash
 cp .env.local.example .env.local
@@ -61,7 +60,12 @@ Then edit `.env.local` with your actual keys:
 4. Run the development server:
 ```bash
 npm run dev
+
+
+npm run build
+
 ```
+4606px x 5787px
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
@@ -95,6 +99,9 @@ Required environment variables (see `.env.local.example`):
 4. Add environment variables in Netlify dashboard
 
 5. Deploy!
+
+GITHUB:
+git add -A && git commit -m "Your commit message" && git push origin main
 
 ### Stripe Webhook Setup
 

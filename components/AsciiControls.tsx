@@ -1,8 +1,9 @@
 'use client'
 
 import { useDesignStore } from '@/store/designStore'
-import { useState, useRef } from 'react'
-import { convertImageToAscii } from '@/lib/asciiConverter'
+import { useState, useRef, useMemo } from 'react'
+import { convertImageToAscii, asciiToSvg } from '@/lib/asciiConverter'
+import { downloadSvg } from '@/lib/svgExport'
 import sounds from '@/lib/sounds'
 
 export function AsciiControls() {
@@ -13,6 +14,8 @@ export function AsciiControls() {
   const setAsciiDensity = useDesignStore((state) => state.setAsciiDensity)
   const asciiSize = useDesignStore((state) => state.asciiSize)
   const setAsciiSize = useDesignStore((state) => state.setAsciiSize)
+  const asciiStyle = useDesignStore((state) => state.asciiStyle)
+  const setAsciiStyle = useDesignStore((state) => state.setAsciiStyle)
   const uploadedImage = useDesignStore((state) => state.uploadedImage)
   const setUploadedImage = useDesignStore((state) => state.setUploadedImage)
   const artworkAspectRatio = useDesignStore((state) => state.artworkAspectRatio)
@@ -24,6 +27,74 @@ export function AsciiControls() {
   
   const inputClass = theme === 'black' ? 'retro-input-black' : 'retro-input-white'
   const buttonClass = theme === 'black' ? 'retro-button-black' : 'retro-button-white'
+  
+  // Generate SVG for ASCII art preview - at 100% or larger depending on asciiSize
+  const asciiSvgPreview = useMemo(() => {
+    if (!asciiArt) return null
+    const foregroundColor = theme === 'black' ? '#FFFFFF' : '#000000'
+    const backgroundColor = theme === 'black' ? '#000000' : '#FFFFFF'
+    
+    // Use same calculation as TShirtPreview for consistency
+    const lines = asciiArt.split('\n')
+    const maxLineLength = Math.max(...lines.map(line => line.length))
+    const numLines = lines.length
+    
+    // Print area dimensions: 4606 x 5787px at 300 DPI
+    const printWidth = 4606
+    const printHeight = 5787
+    
+    // Character dimensions (monospace approximation)
+    const charWidthRatio = 0.6 // width = fontSize * 0.6
+    const lineHeightRatio = 1.2 // height = fontSize * 1.2
+    
+    // Calculate max font size that fits all content
+    const maxFontSizeByWidth = printWidth / (maxLineLength * charWidthRatio)
+    const maxFontSizeByHeight = printHeight / (numLines * lineHeightRatio)
+    const maxFontSize = Math.min(maxFontSizeByWidth, maxFontSizeByHeight)
+    
+    // For preview: show at 100% minimum, but scale up for 120% and 140%
+    // For sizes less than or equal to 100% (asciiSize <= 5), use maxFontSize
+    // For sizes greater than 100% (asciiSize > 5), scale up to show cropped version
+    let fontSize: number
+    if (asciiSize <= 5) {
+      fontSize = maxFontSize // Always 100% for 40%, 60%, 80%, 100%
+    } else {
+      // For 120% and 140%, scale up to show the cropped version
+      const scale = (asciiSize / 5)
+      fontSize = maxFontSize * scale
+    }
+    
+    // includeBackground=true for preview visibility
+    return asciiToSvg(asciiArt, fontSize, 'monospace', foregroundColor, backgroundColor, printWidth, printHeight, true, asciiStyle)
+  }, [asciiArt, theme, asciiSize, asciiStyle])
+  
+  // Generate SVG for export - uses the selected size from asciiSize buttons
+  const asciiSvg = useMemo(() => {
+    if (!asciiArt) return null
+    const foregroundColor = theme === 'black' ? '#FFFFFF' : '#000000'
+    const backgroundColor = theme === 'black' ? '#000000' : '#FFFFFF'
+    
+    const lines = asciiArt.split('\n')
+    const maxLineLength = Math.max(...lines.map(line => line.length))
+    const numLines = lines.length
+    
+    const printWidth = 4606
+    const printHeight = 5787
+    
+    const charWidthRatio = 0.6
+    const lineHeightRatio = 1.2
+    
+    const maxFontSizeByWidth = printWidth / (maxLineLength * charWidthRatio)
+    const maxFontSizeByHeight = printHeight / (numLines * lineHeightRatio)
+    const maxFontSize = Math.min(maxFontSizeByWidth, maxFontSizeByHeight)
+    
+    // For export, use asciiSize to scale from 40% to 140%
+    const scale = (asciiSize / 5)
+    const fontSize = maxFontSize * scale
+    
+    // includeBackground=true for preview visibility
+    return asciiToSvg(asciiArt, fontSize, 'monospace', foregroundColor, backgroundColor, printWidth, printHeight, true, asciiStyle)
+  }, [asciiArt, theme, asciiSize, asciiStyle])
   
   const playClick = () => {
     if (soundEnabled) {
@@ -99,7 +170,7 @@ export function AsciiControls() {
           setArtworkAspectRatio(aspectRatio)
           
           // Convert to ASCII
-          const ascii = await convertImageToAscii(dataUrl, asciiDensity)
+          const ascii = await convertImageToAscii(dataUrl, asciiDensity, 120, asciiStyle)
           setAsciiArt(ascii)
           setIsProcessing(false)
           
@@ -125,7 +196,23 @@ export function AsciiControls() {
     if (uploadedImage) {
       setIsProcessing(true)
       try {
-        const ascii = await convertImageToAscii(uploadedImage, newDensity)
+        const ascii = await convertImageToAscii(uploadedImage, newDensity, 120, asciiStyle)
+        setAsciiArt(ascii)
+      } catch (error) {
+        console.error('Error converting image:', error)
+      }
+      setIsProcessing(false)
+    }
+  }
+  
+  const handleStyleChange = async (newStyle: string) => {
+    playClick()
+    setAsciiStyle(newStyle as any)
+    
+    if (uploadedImage) {
+      setIsProcessing(true)
+      try {
+        const ascii = await convertImageToAscii(uploadedImage, asciiDensity, 120, newStyle)
         setAsciiArt(ascii)
       } catch (error) {
         console.error('Error converting image:', error)
@@ -140,6 +227,63 @@ export function AsciiControls() {
     { value: 2, label: 'NORMAL' },
     { value: 3, label: 'DETAILED' },
     { value: 4, label: 'ULTRA' },
+  ]
+  
+  const stylePresets = [
+    { 
+      value: 'standard', 
+      label: 'STANDARD',
+      font: 'monospace',
+      charSample: `@ # $ % ^ & * ( ) - = +\n+ - = ( ) * & ^ % $ # @\n@ # $ % ^ & * ( ) - = +\n+ - = ( ) * & ^ % $ # @\n@ # $ % ^ & * ( ) - = +\n+ - = ( ) * & ^ % $ # @\n@ # $ % ^ & * ( ) - = +\n+ - = ( ) * & ^ % $ # @\n@ # $ % ^ & * ( ) - = +\n+ - = ( ) * & ^ % $ # @` 
+    },
+    { 
+      value: 'lineArt', 
+      label: 'LINE ART',
+      font: 'Courier New, monospace',
+      charSample: `/ | \\ - + / | \\ - + / | \\\n\\ - + / | \\ - + / | \\ - +\n/ | \\ - + / | \\ - + / | \\\n\\ - + / | \\ - + / | \\ - +\n/ | \\ - + / | \\ - + / | \\\n\\ - + / | \\ - + / | \\ - +\n/ | \\ - + / | \\ - + / | \\\n\\ - + / | \\ - + / | \\ - +\n/ | \\ - + / | \\ - + / | \\\n\\ - + / | \\ - + / | \\ - +` 
+    },
+    { 
+      value: 'solid', 
+      label: 'SOLID',
+      font: 'JetBrains Mono, monospace',
+      charSample: `█ ▀ ▄ █ ▀ ▄ █ ▀ ▄ █ ▀ ▄\n▄ █ ▀ ▄ █ ▀ ▄ █ ▀ ▄ █ ▀\n█ ▀ ▄ █ ▀ ▄ █ ▀ ▄ █ ▀ ▄\n▄ █ ▀ ▄ █ ▀ ▄ █ ▀ ▄ █ ▀\n█ ▀ ▄ █ ▀ ▄ █ ▀ ▄ █ ▀ ▄\n▄ █ ▀ ▄ █ ▀ ▄ █ ▀ ▄ █ ▀\n█ ▀ ▄ █ ▀ ▄ █ ▀ ▄ █ ▀ ▄\n▄ █ ▀ ▄ █ ▀ ▄ █ ▀ ▄ █ ▀\n█ ▀ ▄ █ ▀ ▄ █ ▀ ▄ █ ▀ ▄\n▄ █ ▀ ▄ █ ▀ ▄ █ ▀ ▄ █ ▀` 
+    },
+    { 
+      value: 'shaded', 
+      label: 'SHADED',
+      font: 'Menlo, monospace',
+      charSample: `▓ ▒ ░ ▓ ▒ ░ ▓ ▒ ░ ▓ ▒ ░\n░ ▓ ▒ ░ ▓ ▒ ░ ▓ ▒ ░ ▓ ▒\n▓ ▒ ░ ▓ ▒ ░ ▓ ▒ ░ ▓ ▒ ░\n░ ▓ ▒ ░ ▓ ▒ ░ ▓ ▒ ░ ▓ ▒\n▓ ▒ ░ ▓ ▒ ░ ▓ ▒ ░ ▓ ▒ ░\n░ ▓ ▒ ░ ▓ ▒ ░ ▓ ▒ ░ ▓ ▒\n▓ ▒ ░ ▓ ▒ ░ ▓ ▒ ░ ▓ ▒ ░\n░ ▓ ▒ ░ ▓ ▒ ░ ▓ ▒ ░ ▓ ▒\n▓ ▒ ░ ▓ ▒ ░ ▓ ▒ ░ ▓ ▒ ░\n░ ▓ ▒ ░ ▓ ▒ ░ ▓ ▒ ░ ▓ ▒` 
+    },
+    { 
+      value: 'oldschool', 
+      label: 'OLDSCHOOL',
+      font: 'Liberation Mono, monospace',
+      charSample: `▀ ▄ █ ▀ ▄ █ ▀ ▄ █ ▀ ▄ █\n█ ▀ ▄ █ ▀ ▄ █ ▀ ▄ █ ▀ ▄\n▄ █ ▀ ▄ █ ▀ ▄ █ ▀ ▄ █ ▀\n▀ ▄ █ ▀ ▄ █ ▀ ▄ █ ▀ ▄ █\n█ ▀ ▄ █ ▀ ▄ █ ▀ ▄ █ ▀ ▄\n▄ █ ▀ ▄ █ ▀ ▄ █ ▀ ▄ █ ▀\n▀ ▄ █ ▀ ▄ █ ▀ ▄ █ ▀ ▄ █\n█ ▀ ▄ █ ▀ ▄ █ ▀ ▄ █ ▀ ▄\n▄ █ ▀ ▄ █ ▀ ▄ █ ▀ ▄ █ ▀\n▀ ▄ █ ▀ ▄ █ ▀ ▄ █ ▀ ▄ █` 
+    },
+    { 
+      value: 'newschool', 
+      label: 'NEWSCHOOL',
+      font: 'DejaVu Sans Mono, monospace',
+      charSample: `■ ◆ ● ■ ◆ ● ■ ◆ ● ■ ◆ ●\n● ■ ◆ ● ■ ◆ ● ■ ◆ ● ■ ◆\n■ ◆ ● ■ ◆ ● ■ ◆ ● ■ ◆ ●\n● ■ ◆ ● ■ ◆ ● ■ ◆ ● ■ ◆\n■ ◆ ● ■ ◆ ● ■ ◆ ● ■ ◆ ●\n● ■ ◆ ● ■ ◆ ● ■ ◆ ● ■ ◆\n■ ◆ ● ■ ◆ ● ■ ◆ ● ■ ◆ ●\n● ■ ◆ ● ■ ◆ ● ■ ◆ ● ■ ◆\n■ ◆ ● ■ ◆ ● ■ ◆ ● ■ ◆ ●\n● ■ ◆ ● ■ ◆ ● ■ ◆ ● ■ ◆` 
+    },
+    { 
+      value: 'irc', 
+      label: 'IRC CHAT',
+      font: 'Monaco, monospace',
+      charSample: `# @ * # @ * # @ * # @ * #\n* # @ * # @ * # @ * # @ *\n# @ * # @ * # @ * # @ * #\n* # @ * # @ * # @ * # @ *\n# @ * # @ * # @ * # @ * #\n* # @ * # @ * # @ * # @ *\n# @ * # @ * # @ * # @ * #\n* # @ * # @ * # @ * # @ *\n# @ * # @ * # @ * # @ * #\n* # @ * # @ * # @ * # @ *` 
+    },
+    { 
+      value: 'typewriter', 
+      label: 'TYPEWRITER',
+      font: 'Courier Prime, monospace',
+      charSample: `# @ $ # @ $ # @ $ # @ $ #\n$ # @ $ # @ $ # @ $ # @ $\n# @ $ # @ $ # @ $ # @ $ #\n$ # @ $ # @ $ # @ $ # @ $\n# @ $ # @ $ # @ $ # @ $ #\n$ # @ $ # @ $ # @ $ # @ $\n# @ $ # @ $ # @ $ # @ $ #\n$ # @ $ # @ $ # @ $ # @ $\n# @ $ # @ $ # @ $ # @ $ #\n$ # @ $ # @ $ # @ $ # @ $` 
+    },
+    { 
+      value: 'emoticon', 
+      label: 'EMOTICON',
+      font: 'Noto Sans Mono, monospace',
+      charSample: `:) :( :D :P :) :( :D :P :) :( :D :P\n:P :) :( :D :P :) :( :D :P :) :( :D\n:) :( :D :P :) :( :D :P :) :( :D :P\n:P :) :( :D :P :) :( :D :P :) :( :D\n:) :( :D :P :) :( :D :P :) :( :D :P\n:P :) :( :D :P :) :( :D :P :) :( :D\n:) :( :D :P :) :( :D :P :) :( :D :P\n:P :) :( :D :P :) :( :D :P :) :( :D\n:) :( :D :P :) :( :D :P :) :( :D :P\n:P :) :( :D :P :) :( :D :P :) :( :D` 
+    },
   ]
   
   return (
@@ -171,6 +315,41 @@ export function AsciiControls() {
         </p>
       </div>
       
+      {/* ASCII Preview */}
+      {asciiArt && (
+        <div className="flex flex-col gap-2">
+          <label className="block font-bold mb-3 text-[10px] leading-relaxed">PREVIEW:</label>
+          
+          {/* SVG Preview - Shows full artwork at full size */}
+          {asciiSvgPreview && (
+            <div 
+              className={`${inputClass.replace('retro-input', 'retro-panel')} p-4 flex justify-center items-start overflow-x-auto`}
+              style={{ 
+                width: '100%',
+              }}
+            >
+              <div
+                style={{
+                  width: '100%',
+                  height: 'auto',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'flex-start',
+                }}
+              >
+                <div
+                  dangerouslySetInnerHTML={{ __html: asciiSvgPreview }}
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      
       {/* Density Selection */}
       {uploadedImage && (
         <div>
@@ -181,7 +360,7 @@ export function AsciiControls() {
                 key={preset.value}
                 onClick={() => handleDensityChange(preset.value)}
                 disabled={isProcessing}
-                className={`${buttonClass} retro-button text-[10px] py-3 ${
+                className={`${buttonClass} retro-button text-[11px] py-3 px-2 ${
                   asciiDensity === preset.value ? 'active' : ''
                 } ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
@@ -192,52 +371,86 @@ export function AsciiControls() {
         </div>
       )}
       
-      {/* ASCII Size Slider */}
+      {/* Style Selection */}
       {uploadedImage && (
         <div>
-          <label className="block font-bold mb-3 text-[10px] leading-relaxed">
-            SIZE: {asciiSize.toFixed(1)}
-          </label>
-          <div className="space-y-3">
-            <input
-              type="range"
-              min="0.1"
-              max="10"
-              step="0.1"
-              value={asciiSize}
-              onChange={(e) => {
-                playClick()
-                setAsciiSize(parseFloat(e.target.value))
-              }}
-              className="w-full h-8 appearance-none cursor-pointer"
-              style={{
-                background: theme === 'black' 
-                  ? `linear-gradient(to right, white 0%, white ${(asciiSize / 10) * 100}%, transparent ${(asciiSize / 10) * 100}%, transparent 100%)`
-                  : `linear-gradient(to right, black 0%, black ${(asciiSize / 10) * 100}%, transparent ${(asciiSize / 10) * 100}%, transparent 100%)`,
-                border: `6px solid ${theme === 'black' ? 'white' : 'black'}`,
-              }}
-            />
-            <div className="flex justify-between text-[8px] leading-relaxed">
-              <span>TINY</span>
-              <span>HUGE</span>
-            </div>
+          <label className="block font-bold mb-3 text-[10px] leading-relaxed">STYLE:</label>
+          <div className="grid grid-cols-2 gap-2">
+            {stylePresets.map((preset) => (
+              <button
+                key={preset.value}
+                onClick={() => handleStyleChange(preset.value)}
+                disabled={isProcessing}
+                className={`${buttonClass} retro-button flex flex-col items-center justify-center gap-2 py-5 px-4 min-h-[100px] ${
+                  asciiStyle === preset.value ? 'active' : ''
+                } ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <div className="text-[13px] font-bold">{preset.label}</div>
+                <div className={`text-[8px] font-bold style-${preset.value} tracking-tight`}>{preset.charSample.split('\n')[0]}</div>
+              </button>
+            ))}
           </div>
         </div>
       )}
       
-      {/* ASCII Preview */}
-      {asciiArt && (
-        <div className="flex flex-col">
-          <label className="block font-bold mb-3 text-[10px] leading-relaxed">PREVIEW:</label>
-          <div 
-            className={`${inputClass.replace('retro-input', 'retro-panel')} overflow-x-auto`}
-          >
-            <pre 
-              className="font-mono text-[6px] leading-[6px] whitespace-pre inline-block min-w-full"
-            >
-              {asciiArt}
-            </pre>
+      {/* ASCII Size Buttons */}
+      {uploadedImage && (
+        <div>
+          <label className="block font-bold mb-3 text-[10px] leading-relaxed">
+            SIZE:
+          </label>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { value: 2, label: '40%' },
+              { value: 3, label: '60%' },
+              { value: 4, label: '80%' },
+              { value: 5, label: '100%' },
+              { value: 6, label: '120%' },
+              { value: 7, label: '140%' },
+            ].map(({ value, label }) => (
+              <button
+                key={value}
+                onClick={() => {
+                  playClick()
+                  setAsciiSize(value)
+                }}
+                className={`${buttonClass} retro-button text-[10px] py-3 px-2 ${asciiSize === value ? 'active' : ''}`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
+        </div>
+      )}
+      
+      {/* Export Buttons */}
+      {asciiArt && (
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => {
+              playClick()
+              if (asciiSvg) {
+                downloadSvg(asciiSvg, 'ascii-art.svg')
+              }
+            }}
+            className={`${buttonClass} retro-button text-[8px] py-2`}
+          >
+            EXPORT SVG
+          </button>
+          <button
+            onClick={() => {
+              playClick()
+              // Copy SVG to clipboard
+              if (asciiSvg) {
+                navigator.clipboard.writeText(asciiSvg).then(() => {
+                  alert('SVG copied to clipboard!')
+                })
+              }
+            }}
+            className={`${buttonClass} retro-button text-[8px] py-2`}
+          >
+            COPY SVG
+          </button>
         </div>
       )}
     </div>

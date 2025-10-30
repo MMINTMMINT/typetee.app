@@ -1,7 +1,8 @@
 'use client'
 
 import { useDesignStore } from '@/store/designStore'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useMemo } from 'react'
+import { asciiToSvg } from '@/lib/asciiConverter'
 
 export function TShirtPreview() {
   const theme = useDesignStore((state) => state.theme)
@@ -22,83 +23,58 @@ export function TShirtPreview() {
     pressStart: '"Press Start 2P"',
   }
   
+  // Generate SVG for ASCII art
+  const asciiSvg = useMemo(() => {
+    if (mode !== 'ascii' || !asciiArt) return null
+    
+    const foregroundColor = theme === 'black' ? '#FFFFFF' : '#000000'
+    const backgroundColor = theme === 'black' ? '#000000' : '#FFFFFF'
+    
+    // Calculate the maximum font size that fits all content in print area
+    const lines = asciiArt.split('\n')
+    const maxLineLength = Math.max(...lines.map(line => line.length))
+    const numLines = lines.length
+    
+    // Print area dimensions: 4606 x 5787px at 300 DPI
+    const printWidth = 4606
+    const printHeight = 5787
+    
+    // Character dimensions (monospace approximation)
+    const charWidthRatio = 0.6 // width = fontSize * 0.6
+    const lineHeightRatio = 1.2 // height = fontSize * 1.2
+    
+    // Calculate max font size that fits all content
+    const maxFontSizeByWidth = printWidth / (maxLineLength * charWidthRatio)
+    const maxFontSizeByHeight = printHeight / (numLines * lineHeightRatio)
+    const maxFontSize = Math.min(maxFontSizeByWidth, maxFontSizeByHeight)
+    
+    // At asciiSize=5 (middle), use maxFontSize (fills print area)
+    // At asciiSize=1, use 20% of maxFontSize (tiny)
+    // At asciiSize=10, use 200% of maxFontSize (huge, will be clipped)
+    const scale = (asciiSize / 5) // 1→0.2, 5→1.0, 10→2.0
+    const fontSize = maxFontSize * scale
+    
+    // includeBackground=false to let the t-shirt show through
+    return asciiToSvg(asciiArt, fontSize, 'monospace', foregroundColor, backgroundColor, printWidth, printHeight, false)
+  }, [asciiArt, asciiSize, theme, mode])
+  
   // Update canvas with design
   useEffect(() => {
     const canvas = canvasRef.current
-      // Split into lines and trim leading/trailing empty rows and columns so
-      // the visible content anchors to the top without invisible padding.
-      const rawLines = asciiArt.split('\n')
-            
-      // Find top and bottom rows that contain at least one non-space char
-      let topRow = 0
-      while (topRow < rawLines.length && rawLines[topRow].trim().length === 0) topRow++
-      let bottomRow = rawLines.length - 1
-      while (bottomRow >= topRow && rawLines[bottomRow].trim().length === 0) bottomRow--
-            
-      const croppedRows = rawLines.slice(topRow, bottomRow + 1)
-            
-      // Determine leftmost and rightmost non-space columns across all rows
-      let leftCol = Infinity
-      let rightCol = -1
-      for (const row of croppedRows) {
-        // Skip fully empty rows (already trimmed above, but defensively)
-        if (row.trim().length === 0) continue
-        const firstIdx = row.search(/\S/)
-        const lastIdx = row.lastIndexOf(row.trim().slice(-1))
-        if (firstIdx !== -1) leftCol = Math.min(leftCol, firstIdx)
-        if (lastIdx !== -1) rightCol = Math.max(rightCol, lastIdx)
-      }
-      // Fallback to no column crop if nothing found
-      if (!isFinite(leftCol) || rightCol < leftCol) {
-        leftCol = 0
-        rightCol = (croppedRows[0] ?? '').length - 1
-      }
-      const lines = croppedRows.map((row) => row.slice(leftCol, rightCol + 1))
-    
     const ctx = canvas?.getContext('2d')
     if (!ctx || !canvas) return
     
-    // Set canvas size based on mode
-    let displayWidth: number
-    let displayHeight: number
+    // Only update canvas for text mode - skip entirely for ASCII mode
+    if (mode !== 'text') return
     
-    if (mode === 'ascii' && asciiArt) {
-      // For ASCII: canvas should match the artwork's aspect ratio
-      // Calculate aspect ratio from the trimmed ASCII content
-      const lines = rawLines.slice(topRow, bottomRow + 1).map((row) => row.slice(leftCol, rightCol + 1))
-      const longestLine = lines.reduce((a, b) => a.length > b.length ? a : b, '')
-      
-      // Measure actual dimensions at a test size
-      const testSize = 100
-      ctx.font = `bold ${testSize}px monospace`
-      const artworkWidth = ctx.measureText(longestLine).width
-      const artworkHeight = lines.length * testSize * 1.2
-      const artworkRatio = artworkWidth / artworkHeight
-      
-      // Print area constraints (4606 x 5787)
-      const printAreaRatio = 4606 / 5787
-      const maxWidth = 460
-      const maxHeight = 579
-      
-      // Size canvas to match artwork ratio within print area bounds
-      if (artworkRatio > printAreaRatio) {
-        // Artwork is wider than print area - constrain by width
-        displayWidth = maxWidth
-        displayHeight = maxWidth / artworkRatio
-      } else {
-        // Artwork is taller than print area - constrain by height
-        displayHeight = maxHeight
-        displayWidth = maxHeight * artworkRatio
-      }
-    } else {
-      // For text mode: use same print area ratio as ASCII (4606 x 5787)
-      const printAreaRatio = 4606 / 5787
-      const maxWidth = 460
-      const maxHeight = 579
-      // Text uses full print area
-      displayWidth = maxWidth
-      displayHeight = maxHeight
-    }
+    // Set canvas size for text mode
+    // For text mode: use same print area ratio as ASCII (4606 x 5787)
+    const printAreaRatio = 4606 / 5787
+    const maxWidth = 460
+    const maxHeight = 579
+    // Text uses full print area
+    const displayWidth = maxWidth
+    const displayHeight = maxHeight
     
     // Scale up canvas resolution for sharper rendering (2x internal resolution)
     const dpr = 2 // Device pixel ratio
@@ -134,15 +110,16 @@ export function TShirtPreview() {
       // Calculate font size based on textSize scale
       let fontSize: number
       
-      // Base sizing: textSize * 14 (size 2 = 28px, size 3 = 42px, etc)
-      // Size 1 should be smaller than size 2
-      fontSize = textSize * 14
+      // Base sizing: textSize * 10 (size 2 = 20px, size 3 = 30px, etc)
+      // Reduced from textSize * 14 to make all sizes smaller
+      fontSize = textSize * 10
       
       // Ensure size stays within reasonable bounds
       fontSize = Math.max(fontSize, 12) // Minimum 12px
-      fontSize = Math.min(fontSize, 180) // Maximum 180px
+      fontSize = Math.min(fontSize, 140) // Maximum 140px (reduced from 180px)
       
       ctx.font = `900 ${fontSize}px ${fontMap[font]}` // Weight 900 for extra bold
+      ctx.letterSpacing = '-2px' // Tighter letter spacing for better appearance
       
       // Process text: split by newlines first, then wrap each line
       const inputLines = text.split('\n')
@@ -160,10 +137,37 @@ export function TShirtPreview() {
         const words = inputLine.split(' ')
         let currentLine = ''
         
-        for (const word of words) {
+        for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
+          const word = words[wordIndex]
+          
           if (currentLine === '') {
-            // Start a new line with this word
-            currentLine = word
+            // Start a new line with this word - but check if word itself fits
+            const wordWidth = ctx.measureText(word).width
+            if (wordWidth <= maxWidth) {
+              currentLine = word
+            } else {
+              // Word is too long even for empty line - need to hyphenate
+              let remainingWord = word
+              while (remainingWord.length > 0) {
+                let nextFitWord = ''
+                for (let charIndex = 1; charIndex <= remainingWord.length; charIndex++) {
+                  const partialWord = remainingWord.substring(0, charIndex)
+                  const testWidth = ctx.measureText(partialWord).width
+                  if (testWidth <= maxWidth) {
+                    nextFitWord = partialWord
+                  } else {
+                    break
+                  }
+                }
+                if (nextFitWord.length > 0 && nextFitWord.length < remainingWord.length) {
+                  lines.push(nextFitWord + '-')
+                  remainingWord = remainingWord.substring(nextFitWord.length)
+                } else {
+                  currentLine = remainingWord
+                  remainingWord = ''
+                }
+              }
+            }
           } else {
             // Try adding word to current line
             const testLine = currentLine + ' ' + word
@@ -173,11 +177,63 @@ export function TShirtPreview() {
               // Fits!
               currentLine = testLine
             } else {
-              // Doesn't fit - push current line and start new one
-              if (currentLine.length > 0) {
-                lines.push(currentLine)
+              // Doesn't fit - check if we need to cut the word
+              // First, try to fit as many characters of the word as possible
+              let charIndex = 0
+              let bestFitWord = ''
+              
+              for (charIndex = 1; charIndex <= word.length; charIndex++) {
+                const partialWord = word.substring(0, charIndex)
+                const testLineWithPartial = currentLine + ' ' + partialWord
+                const testWidthWithPartial = ctx.measureText(testLineWithPartial).width
+                
+                if (testWidthWithPartial <= maxWidth) {
+                  bestFitWord = partialWord
+                } else {
+                  break
+                }
               }
-              currentLine = word
+              
+              // If we fit any part of the word, add it with hyphen
+              if (bestFitWord.length > 0 && bestFitWord.length < word.length) {
+                // Word is cut - add hyphen
+                lines.push(currentLine + ' ' + bestFitWord + '-')
+                // Continue with the rest of the word on new lines
+                let remainingWord = word.substring(bestFitWord.length)
+                
+                // Keep breaking the remaining word across lines if needed
+                while (remainingWord.length > 0) {
+                  let nextFitWord = ''
+                  
+                  for (charIndex = 1; charIndex <= remainingWord.length; charIndex++) {
+                    const partialWord = remainingWord.substring(0, charIndex)
+                    const testWidth = ctx.measureText(partialWord).width
+                    
+                    if (testWidth <= maxWidth) {
+                      nextFitWord = partialWord
+                    } else {
+                      break
+                    }
+                  }
+                  
+                  if (nextFitWord.length > 0 && nextFitWord.length < remainingWord.length) {
+                    // Still need to cut
+                    lines.push(nextFitWord + '-')
+                    remainingWord = remainingWord.substring(nextFitWord.length)
+                  } else {
+                    // Rest of word fits on this line
+                    currentLine = remainingWord
+                    remainingWord = ''
+                  }
+                }
+              } else {
+                // Complete word doesn't fit at all, or fits completely
+                // Push current line and start new one with the full word
+                if (currentLine.length > 0) {
+                  lines.push(currentLine)
+                }
+                currentLine = word
+              }
             }
           }
         }
@@ -212,70 +268,22 @@ export function TShirtPreview() {
         ctx.fillText(line, xPos + 0.5, yPos)
         ctx.fillText(line, xPos, yPos + 0.5)
       })
-  } else if (mode === 'ascii' && asciiArt) {
-      ctx.imageSmoothingEnabled = false
-      ctx.fillStyle = theme === 'black' ? '#FFFFFF' : '#000000'
-      
-      const lines = asciiArt.split('\n')
-      
-      // Find the longest line
-      const longestLine = lines.reduce((a, b) => a.length > b.length ? a : b, '')
-      
-      // Calculate font size based on asciiSize
-      let baseFontSize: number
-      
-      // Test with a reference size to measure the actual rendered dimensions
-      const testFontSize = 100
-      ctx.font = `bold ${testFontSize}px monospace`
-      
-      // Measure the actual width of the longest line at test size
-      const testWidth = ctx.measureText(longestLine).width
-      const testHeight = lines.length * testFontSize * 1.2
-      
-      // Calculate scaling factors to fit within display dimensions
-      const scaleForWidth = displayWidth / testWidth
-      const scaleForHeight = displayHeight / testHeight
-      
-      // Use the smaller scale to ensure entire artwork fits without cropping
-      const fitScale = Math.min(scaleForWidth, scaleForHeight)
-      
-      // Calculate the base fit size (size 5.0 = 100% fit)
-      const baseFitSize = testFontSize * fitScale
-      
-      // Scale based on asciiSize (0.1 to 10)
-      // 5.0 = 100% fit, <5.0 = smaller, >5.0 = larger
-      baseFontSize = baseFitSize * (asciiSize / 5.0)
-      
-      baseFontSize = Math.max(baseFontSize, 4) // Minimum 4px
-      
-      ctx.font = `bold ${baseFontSize}px monospace`
-      ctx.textAlign = 'center' // ASCII art is always centered horizontally
-      ctx.textBaseline = 'top'
-      
-      const lineHeight = baseFontSize * 1.2
-      // Top-align the artwork within the print area
-      const startY = 0
-      
-      lines.forEach((line, i) => {
-        const yPos = startY + i * lineHeight
-        // Draw twice for extra bold effect
-        ctx.fillText(line, displayWidth / 2, yPos)
-        ctx.fillText(line, displayWidth / 2 + 0.5, yPos)
-      })
     }
   }, [theme, mode, text, font, textSize, textAlign, asciiArt, asciiSize])
   
   return (
     <div className="p-4 w-full h-full flex flex-col items-center justify-center">
       <div className="relative w-full max-w-full">
-        {/* T-Shirt Image */}
-        <div className="relative">
+        {/* T-Shirt SVG Outline with Design Overlay */}
+        <div 
+          className="relative w-full"
+        >
           <img
-            src={placement === 'front' ? '/front.webp' : '/back.webp'}
+            src={placement === 'front' ? '/front.svg' : '/back.svg'}
             alt={`T-Shirt ${placement}`}
-            className="w-full h-auto pixelated"
+            className="w-full h-auto"
             style={{
-              imageRendering: 'pixelated',
+              display: 'block',
               filter: theme === 'black' ? 'invert(1)' : 'none',
             }}
           />
@@ -292,16 +300,37 @@ export function TShirtPreview() {
               alignItems: 'flex-start',
             }}
           >
-            <canvas
-              ref={canvasRef}
-              className="pixelated"
-              style={{ 
-                imageRendering: 'pixelated',
-                maxWidth: '100%',
-                maxHeight: '100%',
-                display: 'block',
-              }}
-            />
+            {mode === 'text' ? (
+              <canvas
+                ref={canvasRef}
+                className="pixelated"
+                style={{ 
+                  imageRendering: 'pixelated',
+                  maxWidth: '100%',
+                  maxHeight: '100%',
+                  display: 'block',
+                }}
+              />
+            ) : asciiSvg ? (
+              <div
+                style={{
+                  aspectRatio: '4606 / 5787',
+                  width: '100%',
+                  height: 'auto',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'flex-start',
+                }}
+              >
+                <div
+                  dangerouslySetInnerHTML={{ __html: asciiSvg }}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                  }}
+                />
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

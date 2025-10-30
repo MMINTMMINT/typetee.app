@@ -11,7 +11,6 @@ export function DesignControls() {
   const mode = useDesignStore((state) => state.mode)
   const setMode = useDesignStore((state) => state.setMode)
   const soundEnabled = useDesignStore((state) => state.soundEnabled)
-  const toggleSound = useDesignStore((state) => state.toggleSound)
   
   const panelClass = theme === 'black' ? 'retro-panel-black' : 'retro-panel-white'
   const buttonClass = theme === 'black' ? 'retro-button-black' : 'retro-button-white'
@@ -60,19 +59,6 @@ export function DesignControls() {
       
       {/* Placement Controls */}
       <PlacementControls />
-      
-      {/* Sound Toggle */}
-      <div className="mt-6 pt-6 border-t-[6px] border-current">
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={soundEnabled}
-            onChange={toggleSound}
-            className="w-6 h-6 cursor-pointer"
-          />
-          <span className="font-bold text-[10px] leading-relaxed">ENABLE SOUNDS</span>
-        </label>
-      </div>
     </div>
   )
 }

@@ -6,6 +6,7 @@ export type Font = 'commodore' | 'vt323' | 'pressStart'
 export type DesignMode = 'text' | 'ascii'
 export type TShirtSize = 'S' | 'M' | 'L' | 'XL' | '2XL'
 export type TextAlign = 'left' | 'center' | 'right'
+export type AsciiStyle = 'standard' | 'lineArt' | 'solid' | 'shaded' | 'oldschool' | 'newschool' | 'irc' | 'typewriter' | 'emoticon'
 
 export interface DesignState {
   // Theme (controls both UI and shirt color)
@@ -34,6 +35,8 @@ export interface DesignState {
   setAsciiDensity: (density: number) => void
   asciiSize: number
   setAsciiSize: (size: number) => void
+  asciiStyle: AsciiStyle
+  setAsciiStyle: (style: AsciiStyle) => void
   uploadedImage: string | null
   setUploadedImage: (image: string | null) => void
   artworkAspectRatio: number | null
@@ -64,6 +67,7 @@ const initialState = {
   textAlign: 'left' as TextAlign,
   asciiArt: '',
   asciiDensity: 2,
+  asciiStyle: 'standard' as AsciiStyle,
   uploadedImage: null,
   placement: 'front' as Placement,
   size: 'M' as TShirtSize,
@@ -91,6 +95,7 @@ export const useDesignStore = create<DesignState>((set) => ({
   setAsciiArt: (asciiArt) => set({ asciiArt }),
   setAsciiDensity: (asciiDensity) => set({ asciiDensity }),
   setAsciiSize: (asciiSize) => set({ asciiSize }),
+  setAsciiStyle: (asciiStyle) => set({ asciiStyle }),
   setUploadedImage: (uploadedImage) => set({ uploadedImage }),
   setArtworkAspectRatio: (artworkAspectRatio) => set({ artworkAspectRatio }),
   

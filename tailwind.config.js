@@ -1,5 +1,16 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  safelist: [
+    'style-standard',
+    'style-lineArt',
+    'style-solid',
+    'style-shaded',
+    'style-oldschool',
+    'style-newschool',
+    'style-irc',
+    'style-typewriter',
+    'style-emoticon',
+  ],
   content: [
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',

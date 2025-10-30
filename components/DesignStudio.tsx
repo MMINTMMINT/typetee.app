@@ -2,6 +2,7 @@
 
 import { useDesignStore } from '@/store/designStore'
 import { ThemeToggle } from './ThemeToggle'
+import { SoundToggle } from './SoundToggle'
 import { DesignControls } from './DesignControls'
 import { TShirtPreview } from './TShirtPreview'
 import { CheckoutButton } from './CheckoutButton'
@@ -19,7 +20,10 @@ export function DesignStudio() {
       <header className="border-b-[6px] border-current p-2 sm:p-4 fixed top-0 left-0 right-0 z-50">
         <div className="flex items-center justify-between px-2 sm:px-4">
           <PixelLogo />
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <SoundToggle />
+            <ThemeToggle />
+          </div>
         </div>
       </header>
       
