@@ -11,7 +11,7 @@ export function PixelLogo() {
 
   return (
     <pre 
-      className="font-mono text-[8px] sm:text-[10px] md:text-xs leading-tight whitespace-pre"
+      className="font-mono text-[6px] sm:text-[10px] md:text-xs leading-tight whitespace-pre"
       style={{
         color: theme === 'black' ? '#FFFFFF' : '#000000',
       }}
