@@ -21,6 +21,22 @@ export function AsciiControls() {
   const artworkAspectRatio = useDesignStore((state) => state.artworkAspectRatio)
   const setArtworkAspectRatio = useDesignStore((state) => state.setArtworkAspectRatio)
   const soundEnabled = useDesignStore((state) => state.soundEnabled)
+  const showAsciiTextOverlay = useDesignStore((state) => state.showAsciiTextOverlay)
+  const setShowAsciiTextOverlay = useDesignStore((state) => state.setShowAsciiTextOverlay)
+  const asciiTextOverlay = useDesignStore((state) => state.asciiTextOverlay)
+  const setAsciiTextOverlay = useDesignStore((state) => state.setAsciiTextOverlay)
+  const asciiTextPosition = useDesignStore((state) => state.asciiTextPosition)
+  const setAsciiTextPosition = useDesignStore((state) => state.setAsciiTextPosition)
+  const asciiTextBackground = useDesignStore((state) => state.asciiTextBackground)
+  const setAsciiTextBackground = useDesignStore((state) => state.setAsciiTextBackground)
+  const asciiTextFont = useDesignStore((state) => state.asciiTextFont)
+  const setAsciiTextFont = useDesignStore((state) => state.setAsciiTextFont)
+  const asciiTextSize = useDesignStore((state) => state.asciiTextSize)
+  const setAsciiTextSize = useDesignStore((state) => state.setAsciiTextSize)
+  const asciiTextAlign = useDesignStore((state) => state.asciiTextAlign)
+  const setAsciiTextAlign = useDesignStore((state) => state.setAsciiTextAlign)
+  const asciiTextFitToBox = useDesignStore((state) => state.asciiTextFitToBox)
+  const setAsciiTextFitToBox = useDesignStore((state) => state.setAsciiTextFitToBox)
   
   const [isProcessing, setIsProcessing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -423,6 +439,222 @@ export function AsciiControls() {
         </div>
       )}
       
+      {/* Text Overlay Controls */}
+      {asciiArt && (
+        <div className="space-y-3">
+          <button
+            onClick={() => {
+              playClick()
+              setShowAsciiTextOverlay(!showAsciiTextOverlay)
+            }}
+            className={`${buttonClass} retro-button w-full text-[10px] py-3 ${
+              showAsciiTextOverlay ? 'active' : ''
+            }`}
+          >
+            {showAsciiTextOverlay ? '✓ ' : ''}ADD TEXT OVERLAY
+          </button>
+
+          {showAsciiTextOverlay && (
+            <div className="space-y-3 p-4 border-4 border-current">
+              {/* Text Input */}
+              <div>
+                <label className="block font-bold mb-2 text-[10px]">
+                  OVERLAY TEXT (MAX 500):
+                </label>
+                <textarea
+                  value={asciiTextOverlay}
+                  onChange={(e) => {
+                    playClick()
+                    setAsciiTextOverlay(e.target.value.slice(0, 500))
+                  }}
+                  maxLength={500}
+                  className={`${inputClass} w-full min-h-[80px] text-[11px] leading-relaxed`}
+                  placeholder="Type text overlay..."
+                />
+                <div className="text-[9px] opacity-70 mt-1">
+                  {asciiTextOverlay.length}/500
+                </div>
+              </div>
+
+              {/* Font Selection */}
+              <div>
+                <label className="block font-bold mb-2 text-[10px]">
+                  FONT:
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={() => {
+                      playClick()
+                      setAsciiTextFont('pressStart')
+                    }}
+                    className={`${buttonClass} retro-button text-[8px] py-3 ${
+                      asciiTextFont === 'pressStart' ? 'active' : ''
+                    }`}
+                  >
+                    PRESS START
+                  </button>
+                  <button
+                    onClick={() => {
+                      playClick()
+                      setAsciiTextFont('vt323')
+                    }}
+                    className={`${buttonClass} retro-button text-[8px] py-3 ${
+                      asciiTextFont === 'vt323' ? 'active' : ''
+                    }`}
+                  >
+                    VT323
+                  </button>
+                  <button
+                    onClick={() => {
+                      playClick()
+                      setAsciiTextFont('commodore')
+                    }}
+                    className={`${buttonClass} retro-button text-[8px] py-3 ${
+                      asciiTextFont === 'commodore' ? 'active' : ''
+                    }`}
+                  >
+                    COMMODORE
+                  </button>
+                </div>
+              </div>
+
+              {/* Text Size */}
+              <div>
+                <label className="block font-bold mb-2 text-[10px]">
+                  TEXT SIZE:
+                </label>
+                <div className="space-y-2">
+                  <div className="grid grid-cols-5 gap-2">
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => {
+                          playClick()
+                          setAsciiTextSize(size)
+                          setAsciiTextFitToBox(false)
+                        }}
+                        disabled={asciiTextFitToBox}
+                        className={`${buttonClass} retro-button text-[9px] py-2 ${
+                          asciiTextSize === size && !asciiTextFitToBox ? 'active' : ''
+                        } ${asciiTextFitToBox ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => {
+                      playClick()
+                      setAsciiTextFitToBox(!asciiTextFitToBox)
+                    }}
+                    className={`${buttonClass} retro-button w-full text-[9px] py-2 ${
+                      asciiTextFitToBox ? 'active' : ''
+                    }`}
+                  >
+                    {asciiTextFitToBox ? '✓ ' : ''}FIT TO BOX
+                  </button>
+                </div>
+              </div>
+
+              {/* Text Alignment */}
+              <div>
+                <label className="block font-bold mb-2 text-[10px]">
+                  ALIGNMENT:
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={() => {
+                      playClick()
+                      setAsciiTextAlign('left')
+                    }}
+                    className={`${buttonClass} retro-button text-[9px] py-2 ${
+                      asciiTextAlign === 'left' ? 'active' : ''
+                    }`}
+                  >
+                    LEFT
+                  </button>
+                  <button
+                    onClick={() => {
+                      playClick()
+                      setAsciiTextAlign('center')
+                    }}
+                    className={`${buttonClass} retro-button text-[9px] py-2 ${
+                      asciiTextAlign === 'center' ? 'active' : ''
+                    }`}
+                  >
+                    CENTER
+                  </button>
+                  <button
+                    onClick={() => {
+                      playClick()
+                      setAsciiTextAlign('right')
+                    }}
+                    className={`${buttonClass} retro-button text-[9px] py-2 ${
+                      asciiTextAlign === 'right' ? 'active' : ''
+                    }`}
+                  >
+                    RIGHT
+                  </button>
+                </div>
+              </div>
+
+              {/* Position Controls */}
+              <div>
+                <label className="block font-bold mb-2 text-[10px]">
+                  POSITION:
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { value: 'top' as const, label: 'TOP' },
+                    { value: 'middle' as const, label: 'MIDDLE' },
+                    { value: 'bottom' as const, label: 'BOTTOM' },
+                  ].map(({ value, label }) => (
+                    <button
+                      key={value}
+                      onClick={() => {
+                        playClick()
+                        setAsciiTextPosition(value)
+                      }}
+                      className={`${buttonClass} retro-button text-[9px] py-2 ${
+                        asciiTextPosition === value ? 'active' : ''
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Background Controls */}
+              <div>
+                <label className="block font-bold mb-2 text-[10px]">
+                  BACKGROUND:
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: 'solid' as const, label: 'SOLID' },
+                    { value: 'transparent' as const, label: 'TRANSPARENT' },
+                  ].map(({ value, label }) => (
+                    <button
+                      key={value}
+                      onClick={() => {
+                        playClick()
+                        setAsciiTextBackground(value)
+                      }}
+                      className={`${buttonClass} retro-button text-[9px] py-2 ${
+                        asciiTextBackground === value ? 'active' : ''
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Export Buttons */}
       {asciiArt && (
         <div className="grid grid-cols-2 gap-2">

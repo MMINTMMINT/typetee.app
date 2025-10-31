@@ -3,6 +3,8 @@
 import { useDesignStore, type Font } from '@/store/designStore'
 import { useState, useEffect, useRef } from 'react'
 import sounds from '@/lib/sounds'
+import { exportDesignAsPNG } from '@/lib/exportDesign'
+import { convertImageToAscii } from '@/lib/asciiConverter'
 
 export function TextControls() {
   const theme = useDesignStore((state) => state.theme)
@@ -87,6 +89,80 @@ export function TextControls() {
   const playClick = () => {
     if (soundEnabled) {
       sounds.click()
+    }
+  }
+  
+  const handleExportDesign = async () => {
+    playClick()
+    try {
+      // Get the canvas from the TShirtPreview component
+      const canvas = document.querySelector('canvas')
+      if (!canvas) {
+        alert('Please render the design first')
+        return
+      }
+      
+      // Create a new canvas at 4500x5100 pixels
+      const exportCanvas = document.createElement('canvas')
+      exportCanvas.width = 4500
+      exportCanvas.height = 5100
+      
+      const ctx = exportCanvas.getContext('2d')
+      if (!ctx) return
+      
+      // Draw on white background
+      ctx.fillStyle = theme === 'black' ? '#000000' : '#FFFFFF'
+      ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height)
+      
+      // Scale and draw the original canvas
+      const scale = Math.min(exportCanvas.width / canvas.width, exportCanvas.height / canvas.height)
+      const x = (exportCanvas.width - canvas.width * scale) / 2
+      const y = (exportCanvas.height - canvas.height * scale) / 2
+      ctx.scale(scale, scale)
+      ctx.drawImage(canvas, x / scale, y / scale)
+      
+      // Export as PNG
+      await exportDesignAsPNG(exportCanvas, `typetee-design-${Date.now()}.png`)
+      alert('Design exported successfully!')
+    } catch (error) {
+      console.error('Export failed:', error)
+      alert('Failed to export design')
+    }
+  }
+  
+  const handleConvertToASCII = async () => {
+    playClick()
+    try {
+      // Get the canvas from the TShirtPreview component
+      const canvas = document.querySelector('canvas')
+      if (!canvas) {
+        alert('Please render the design first')
+        return
+      }
+      
+      // Get canvas image data
+      const imageData = canvas.toDataURL('image/png')
+      
+      // Get store methods and state
+      const state = useDesignStore.getState()
+      const setMode = state.setMode
+      const setUploadedImage = state.setUploadedImage
+      const setAsciiArt = state.setAsciiArt
+      const asciiDensity = state.asciiDensity
+      const asciiStyle = state.asciiStyle
+      
+      // Store the uploaded image
+      setUploadedImage(imageData)
+      
+      // Convert to ASCII using default density and style
+      const ascii = await convertImageToAscii(imageData, asciiDensity, 120, asciiStyle)
+      setAsciiArt(ascii)
+      
+      // Switch to ASCII mode
+      setMode('ascii')
+    } catch (error) {
+      console.error('Conversion failed:', error)
+      alert('Failed to convert to ASCII')
     }
   }
   
@@ -249,6 +325,47 @@ export function TextControls() {
             RIGHT
           </button>
         </div>
+      </div>
+      
+      {/* Export & Convert Buttons */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <button
+          onClick={handleExportDesign}
+          disabled={text.length === 0}
+          className={`${buttonClass} retro-button w-full text-[9px] py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
+        >
+          <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
+            {/* Pixelated download arrow */}
+            <rect x="7" y="0" width="2" height="8" />
+            <rect x="5" y="6" width="2" height="2" />
+            <rect x="9" y="6" width="2" height="2" />
+            <rect x="3" y="8" width="2" height="2" />
+            <rect x="11" y="8" width="2" height="2" />
+            {/* Download box */}
+            <rect x="2" y="12" width="12" height="2" />
+            <rect x="2" y="14" width="12" height="2" />
+          </svg>
+          SAVE PNG (4500x5100)
+        </button>
+        <button
+          onClick={handleConvertToASCII}
+          disabled={text.length === 0}
+          className={`${buttonClass} retro-button w-full text-[9px] py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
+        >
+          <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
+            {/* Pixelated grid/art icon */}
+            <rect x="0" y="0" width="4" height="4" />
+            <rect x="6" y="0" width="4" height="4" />
+            <rect x="12" y="0" width="4" height="4" />
+            <rect x="0" y="6" width="4" height="4" />
+            <rect x="6" y="6" width="4" height="4" />
+            <rect x="12" y="6" width="4" height="4" />
+            <rect x="0" y="12" width="4" height="4" />
+            <rect x="6" y="12" width="4" height="4" />
+            <rect x="12" y="12" width="4" height="4" />
+          </svg>
+          CONVERT TO ASCII ART
+        </button>
       </div>
     </div>
   )
