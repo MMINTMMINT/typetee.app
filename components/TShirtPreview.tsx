@@ -286,8 +286,10 @@ export function TShirtPreview() {
     const ctx = canvas?.getContext('2d')
     if (!ctx || !canvas) return
     
-    // Only render overlay in ASCII mode when enabled
-    if (mode !== 'ascii' || !showAsciiTextOverlay || !asciiTextOverlay) {
+    // Only render overlay in ASCII mode when there is text to display
+    // Note: showAsciiTextOverlay controls whether the control panel is open,
+    // but we should still render the overlay if there's text content
+    if (mode !== 'ascii' || !asciiTextOverlay) {
       // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       return
@@ -297,14 +299,12 @@ export function TShirtPreview() {
     const printWidth = 4606
     const printHeight = 5787
     
-    // Text overlay area: full width, 1050px height
-    const overlayHeight = 1050
-    
     // Scale for display
     const dpr = 2
     const displayWidth = 460
     const displayHeight = 579
     
+    // Canvas setup
     canvas.width = displayWidth * dpr
     canvas.height = displayHeight * dpr
     ctx.scale(dpr, dpr)
@@ -313,154 +313,194 @@ export function TShirtPreview() {
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     
+    // Padding settings (reduced)
+    const horizontalPadding = 20
+    const verticalPaddingTop = 15
+    const verticalPaddingBottom = 2 // Reduced bottom padding
+    const maxWidth = displayWidth - horizontalPadding
+    
+    // Font sizing
+    let fontSize = asciiTextSize * 10
+    fontSize = Math.max(fontSize, 12)
+    fontSize = Math.min(fontSize, 140)
+    
+    // Line height (reduced from 1.8 to 1.4)
+    const lineHeight = fontSize * 1.4
+    
+    // Handle FIT TO BOX mode
+    if (asciiTextFitToBox) {
+      // For fit to box, we need to work in the PRINT area coordinate system
+      // The overlay is 1050px tall in the print area, but we want it to fit within reasonable bounds
+      // Maximum printable overlay height: ~1200px (about 20% of 5787)
+      const maxPrintOverlayHeight = 1200
+      const maxDisplayOverlayHeight = (maxPrintOverlayHeight / printHeight) * displayHeight
+      
+      // Use almost full width for fit to box - minimal padding
+      const fitToBoxPadding = 5
+      const availableWidth = displayWidth - fitToBoxPadding
+      const availableHeight = maxDisplayOverlayHeight
+      
+      let testFontSize = 140
+      let bestFontSize = 12
+      ctx.textBaseline = 'top'
+      
+      while (testFontSize >= 12) {
+        ctx.font = `900 ${testFontSize}px ${fontMap[asciiTextFont]}`
+        ctx.letterSpacing = '-2px'
+        
+        const testLineHeight = testFontSize * 1.4
+        const inputLines = asciiTextOverlay.split('\n')
+        let totalLines = 0
+        
+        for (const inputLine of inputLines) {
+          if (inputLine.trim() === '') {
+            totalLines++
+            continue
+          }
+          
+          const words = inputLine.split(' ')
+          let currentLine = ''
+          
+          for (const word of words) {
+            const testLine = currentLine === '' ? word : currentLine + ' ' + word
+            const testWidth = ctx.measureText(testLine).width
+            
+            if (testWidth <= availableWidth || currentLine === '') {
+              currentLine = testLine
+            } else {
+              totalLines++
+              currentLine = word
+            }
+          }
+          
+          if (currentLine) {
+            totalLines++
+          }
+        }
+        
+        const totalHeight = totalLines * testLineHeight + verticalPaddingTop + verticalPaddingBottom
+        
+        if (totalHeight <= availableHeight) {
+          bestFontSize = testFontSize
+          break
+        }
+        
+        testFontSize -= 2
+      }
+      
+      fontSize = bestFontSize
+    }
+    
+    // Set final font
+    ctx.font = `900 ${fontSize}px ${fontMap[asciiTextFont]}`
+    ctx.letterSpacing = '-2px'
+    ctx.textBaseline = 'top'
+    
+    // Final line height calculation
+    const finalLineHeight = fontSize * 1.4
+    
+    // Use appropriate padding based on fit to box mode
+    const effectivePadding = asciiTextFitToBox ? 5 : horizontalPadding
+    const effectiveMaxWidth = displayWidth - effectivePadding
+    
+    // Word wrap and measure text
+    const inputLines = asciiTextOverlay.split('\n')
+    const lines: string[] = []
+    
+    for (const inputLine of inputLines) {
+      if (inputLine.trim() === '') {
+        lines.push('')
+        continue
+      }
+      
+      const words = inputLine.split(' ')
+      let currentLine = ''
+      
+      for (const word of words) {
+        const testLine = currentLine === '' ? word : currentLine + ' ' + word
+        const testWidth = ctx.measureText(testLine).width
+        
+        if (testWidth <= effectiveMaxWidth || currentLine === '') {
+          currentLine = testLine
+        } else {
+          if (currentLine) lines.push(currentLine)
+          currentLine = word
+        }
+      }
+      
+      if (currentLine) {
+        lines.push(currentLine)
+      }
+    }
+    
+    // Calculate dynamic overlay height based on wrapped text
+    const totalHeight = lines.length * finalLineHeight + verticalPaddingTop + verticalPaddingBottom
+    const overlayHeight = Math.max(totalHeight, 80) // Minimum height of 80px
+    
+    // Scale the overlay height from display size to print area size
+    const scaledOverlayHeight = (overlayHeight / displayHeight) * printHeight
+    
     // Calculate Y position based on position setting
     let yOffset = 0
     if (asciiTextPosition === 'top') {
       yOffset = 0
     } else if (asciiTextPosition === 'middle') {
-      yOffset = (printHeight - overlayHeight) / 2
+      yOffset = (printHeight - scaledOverlayHeight) / 2
     } else { // bottom
-      yOffset = printHeight - overlayHeight
+      yOffset = printHeight - scaledOverlayHeight
     }
     
-    // Scale to display size
+    // Scale Y offset from print area to display
     const scaledYOffset = (yOffset / printHeight) * displayHeight
-    const scaledOverlayHeight = (overlayHeight / printHeight) * displayHeight
     
-    // Draw background if solid - extend beyond canvas and add extra margin
+    // Draw background if solid
     if (asciiTextBackground === 'solid') {
       ctx.fillStyle = theme === 'black' ? '#000000' : '#FFFFFF'
-      // Draw wider and taller to ensure complete coverage
-      ctx.fillRect(-10, scaledYOffset - 5, canvas.width + 20, scaledOverlayHeight + 10)
+      ctx.fillRect(-50, scaledYOffset - 5, displayWidth + 100, overlayHeight + 10)
     }
     
     // Draw text
-    if (asciiTextOverlay) {
-      ctx.fillStyle = theme === 'black' ? '#FFFFFF' : '#000000'
-      ctx.textAlign = asciiTextAlign
-      ctx.textBaseline = 'top'
-      
-      let fontSize: number
-      
-      if (asciiTextFitToBox) {
-        // FIT TO BOX: Calculate optimal font size to fill the container
-        // Use minimal padding for maximum text size
-        const padding = 10 // Reduced padding for fit-to-box
-        const availableWidth = displayWidth - padding
-        const availableHeight = scaledOverlayHeight - 20 // Reduced vertical padding
-        
-        // Try different font sizes to find the best fit
-        let testFontSize = 140 // Start with max
-        ctx.font = `900 ${testFontSize}px ${fontMap[asciiTextFont]}`
-        ctx.letterSpacing = '-2px'
-        
-        // Measure text with word wrapping
-        const inputLines = asciiTextOverlay.split('\n')
-        let fits = false
-        
-        while (testFontSize > 12 && !fits) {
-          ctx.font = `900 ${testFontSize}px ${fontMap[asciiTextFont]}`
-          const lineHeight = testFontSize * 1.8
-          
-          // Count how many lines we'll need with this font size
-          let totalLines = 0
-          for (const inputLine of inputLines) {
-            if (inputLine.trim() === '') {
-              totalLines++
-              continue
-            }
-            
-            const words = inputLine.split(' ')
-            let currentLine = ''
-            
-            for (const word of words) {
-              const testLine = currentLine === '' ? word : currentLine + ' ' + word
-              const testWidth = ctx.measureText(testLine).width
-              
-              if (testWidth <= availableWidth || currentLine === '') {
-                currentLine = testLine
-              } else {
-                totalLines++
-                currentLine = word
-              }
-            }
-            
-            if (currentLine) {
-              totalLines++
-            }
-          }
-          
-          const totalHeight = totalLines * lineHeight
-          
-          if (totalHeight <= availableHeight) {
-            fits = true
-          } else {
-            testFontSize -= 2 // Decrease font size
-          }
-        }
-        
-        fontSize = Math.max(testFontSize, 12)
-      } else {
-        // Manual size: Calculate font size based on asciiTextSize
-        fontSize = asciiTextSize * 10
-        fontSize = Math.max(fontSize, 12) // Minimum 12px
-        fontSize = Math.min(fontSize, 140) // Maximum 140px
-      }
-      
-      ctx.font = `900 ${fontSize}px ${fontMap[asciiTextFont]}`
-      ctx.letterSpacing = '-2px'
-      
-      // Word wrap the text - use reduced padding for fit-to-box
-      const horizontalPadding = asciiTextFitToBox ? 10 : 40
-      const verticalPadding = asciiTextFitToBox ? 10 : 20
-      const inputLines = asciiTextOverlay.split('\n')
-      const lines: string[] = []
-      const maxWidth = displayWidth - horizontalPadding
-      
-      for (const inputLine of inputLines) {
-        if (inputLine.trim() === '') {
-          lines.push('')
-          continue
-        }
-        
-        const words = inputLine.split(' ')
-        let currentLine = ''
-        
-        for (const word of words) {
-          const testLine = currentLine === '' ? word : currentLine + ' ' + word
-          const testWidth = ctx.measureText(testLine).width
-          
-          if (testWidth <= maxWidth || currentLine === '') {
-            currentLine = testLine
-          } else {
-            lines.push(currentLine)
-            currentLine = word
-          }
-        }
-        
-        if (currentLine) {
-          lines.push(currentLine)
-        }
-      }
-      
-      // Draw each line - use reduced padding for fit-to-box
-      const lineHeight = fontSize * 1.8
-      const leftPadding = asciiTextFitToBox ? 5 : 20
-      let xPos = leftPadding
-      if (asciiTextAlign === 'center') {
-        xPos = displayWidth / 2
-      } else if (asciiTextAlign === 'right') {
-        xPos = displayWidth - leftPadding
-      }
-      
-      lines.forEach((line, index) => {
-        const yPos = scaledYOffset + verticalPadding + (index * lineHeight)
-        ctx.fillText(line, xPos, yPos)
-        ctx.fillText(line, xPos + 0.5, yPos)
-        ctx.fillText(line, xPos, yPos + 0.5)
-      })
+    ctx.fillStyle = theme === 'black' ? '#FFFFFF' : '#000000'
+    ctx.textAlign = asciiTextAlign
+    
+    const leftPadding = asciiTextFitToBox ? 2 : 10
+    let xPos = leftPadding
+    if (asciiTextAlign === 'center') {
+      xPos = displayWidth / 2
+    } else if (asciiTextAlign === 'right') {
+      xPos = displayWidth - leftPadding
     }
-  }, [theme, mode, showAsciiTextOverlay, asciiTextOverlay, asciiTextPosition, asciiTextBackground, asciiTextFont, asciiTextSize, asciiTextAlign, asciiTextFitToBox, fontMap])
+    
+    // For fit to box, evenly space text vertically
+    let drawVerticalPadding = verticalPaddingTop
+    if (asciiTextFitToBox && lines.length > 0) {
+      // Calculate available height for text
+      const availableHeight = overlayHeight - verticalPaddingTop - verticalPaddingBottom
+      const totalTextHeight = lines.length * finalLineHeight
+      const extraSpace = Math.max(0, availableHeight - totalTextHeight)
+      
+      // Distribute extra space evenly between lines
+      if (extraSpace > 0) {
+        drawVerticalPadding = verticalPaddingTop + (extraSpace / (lines.length + 1))
+      }
+    }
+    
+    lines.forEach((line, index) => {
+      let yPos
+      if (asciiTextFitToBox && lines.length > 0) {
+        // Evenly distribute lines vertically
+        const availableHeight = overlayHeight - verticalPaddingTop - verticalPaddingBottom
+        const totalTextHeight = lines.length * finalLineHeight
+        const spacing = Math.max(finalLineHeight, availableHeight / lines.length)
+        yPos = scaledYOffset + verticalPaddingTop + (index * spacing)
+      } else {
+        yPos = scaledYOffset + verticalPaddingTop + (index * finalLineHeight)
+      }
+      ctx.fillText(line, xPos, yPos)
+      ctx.fillText(line, xPos + 0.5, yPos)
+      ctx.fillText(line, xPos, yPos + 0.5)
+    })
+  }, [theme, mode, asciiTextOverlay, asciiTextPosition, asciiTextBackground, asciiTextFont, asciiTextSize, asciiTextAlign, asciiTextFitToBox, fontMap])
   
   return (
     <div className="p-4 w-full h-full flex flex-col items-center justify-center">
@@ -512,6 +552,7 @@ export function TShirtPreview() {
                   justifyContent: 'center',
                   alignItems: 'flex-start',
                   position: 'relative',
+                  overflow: 'clip',
                 }}
               >
                 <div
@@ -519,10 +560,11 @@ export function TShirtPreview() {
                   style={{
                     width: '100%',
                     height: '100%',
+                    overflow: 'hidden',
                   }}
                 />
-                {/* Text Overlay Canvas */}
-                {showAsciiTextOverlay && asciiTextOverlay && (
+                {/* Text Overlay Canvas - positioned to cover entire area */}
+                {asciiTextOverlay && (
                   <canvas
                     ref={overlayCanvasRef}
                     className="pixelated"
@@ -534,6 +576,7 @@ export function TShirtPreview() {
                       height: '100%',
                       imageRendering: 'pixelated',
                       pointerEvents: 'none',
+                      display: 'block',
                     }}
                   />
                 )}

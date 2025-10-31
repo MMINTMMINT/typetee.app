@@ -10,8 +10,6 @@ export function AsciiControls() {
   const theme = useDesignStore((state) => state.theme)
   const asciiArt = useDesignStore((state) => state.asciiArt)
   const setAsciiArt = useDesignStore((state) => state.setAsciiArt)
-  const asciiDensity = useDesignStore((state) => state.asciiDensity)
-  const setAsciiDensity = useDesignStore((state) => state.setAsciiDensity)
   const asciiSize = useDesignStore((state) => state.asciiSize)
   const setAsciiSize = useDesignStore((state) => state.setAsciiSize)
   const asciiStyle = useDesignStore((state) => state.asciiStyle)
@@ -185,8 +183,8 @@ export function AsciiControls() {
           const aspectRatio = img.height / img.width
           setArtworkAspectRatio(aspectRatio)
           
-          // Convert to ASCII
-          const ascii = await convertImageToAscii(dataUrl, asciiDensity, 120, asciiStyle)
+          // Convert to ASCII with default density of 2 (NORMAL)
+          const ascii = await convertImageToAscii(dataUrl, 2, 120, asciiStyle)
           setAsciiArt(ascii)
           setIsProcessing(false)
           
@@ -205,22 +203,6 @@ export function AsciiControls() {
     }
   }
   
-  const handleDensityChange = async (newDensity: number) => {
-    playClick()
-    setAsciiDensity(newDensity)
-    
-    if (uploadedImage) {
-      setIsProcessing(true)
-      try {
-        const ascii = await convertImageToAscii(uploadedImage, newDensity, 120, asciiStyle)
-        setAsciiArt(ascii)
-      } catch (error) {
-        console.error('Error converting image:', error)
-      }
-      setIsProcessing(false)
-    }
-  }
-  
   const handleStyleChange = async (newStyle: string) => {
     playClick()
     setAsciiStyle(newStyle as any)
@@ -228,7 +210,8 @@ export function AsciiControls() {
     if (uploadedImage) {
       setIsProcessing(true)
       try {
-        const ascii = await convertImageToAscii(uploadedImage, asciiDensity, 120, newStyle)
+        // Use default density of 2 (NORMAL)
+        const ascii = await convertImageToAscii(uploadedImage, 2, 120, newStyle)
         setAsciiArt(ascii)
       } catch (error) {
         console.error('Error converting image:', error)
@@ -236,14 +219,6 @@ export function AsciiControls() {
       setIsProcessing(false)
     }
   }
-  
-  const densityPresets = [
-    { value: 0, label: 'CHUNKY' },
-    { value: 1, label: 'LIGHT' },
-    { value: 2, label: 'NORMAL' },
-    { value: 3, label: 'DETAILED' },
-    { value: 4, label: 'ULTRA' },
-  ]
   
   const stylePresets = [
     { 
@@ -363,27 +338,6 @@ export function AsciiControls() {
               </div>
             </div>
           )}
-        </div>
-      )}
-      
-      {/* Density Selection */}
-      {uploadedImage && (
-        <div>
-          <label className="block font-bold mb-3 text-[10px] leading-relaxed">DENSITY:</label>
-          <div className="grid grid-cols-2 gap-2">
-            {densityPresets.map((preset) => (
-              <button
-                key={preset.value}
-                onClick={() => handleDensityChange(preset.value)}
-                disabled={isProcessing}
-                className={`${buttonClass} retro-button text-[11px] py-3 px-2 ${
-                  asciiDensity === preset.value ? 'active' : ''
-                } ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                {preset.label}
-              </button>
-            ))}
-          </div>
         </div>
       )}
       
@@ -649,6 +603,21 @@ export function AsciiControls() {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Convert to ASCII Button */}
+              <div>
+                <button
+                  onClick={() => {
+                    playClick()
+                    // Close the text overlay panel
+                    // The text overlay is already displaying as ASCII on the artwork
+                    setShowAsciiTextOverlay(false)
+                  }}
+                  className={`${buttonClass} retro-button w-full text-[9px] py-2 bg-opacity-75`}
+                >
+                  APPLY & CLOSE
+                </button>
               </div>
             </div>
           )}
