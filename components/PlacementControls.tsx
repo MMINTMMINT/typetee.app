@@ -18,7 +18,7 @@ export function PlacementControls() {
   }
   
   return (
-    <div className="mt-6 pt-6 border-t-[6px] border-current">
+    <div className="mt-6">
       <label className="block font-bold mb-3 text-[10px] leading-relaxed">PLACEMENT:</label>
       <div className="flex gap-3">
         <button

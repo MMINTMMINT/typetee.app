@@ -22,8 +22,9 @@ module.exports = {
         terminal: {
           black: '#000000',
           white: '#FFFFFF',
-          green: '#00FF00',
+          green: '#33D17A',
           amber: '#FFBF00',
+          accent: '#fe8181',
         },
       },
       fontFamily: {

@@ -32,15 +32,17 @@ export function CheckoutButton() {
   return (
     <>
       {!showSizeSelector ? (
-        <button
-          onClick={handleBuyNow}
-          disabled={!hasDesign}
-          className={`${buttonClass} retro-button text-[16px] px-12 py-6 ${
-            !hasDesign ? 'opacity-30 cursor-not-allowed' : ''
-          }`}
-        >
-          BUY NOW - $29.99
-        </button>
+        <div className="flex justify-center">
+          <button
+            onClick={handleBuyNow}
+            disabled={!hasDesign}
+            className={`font-pressStart text-[24px] px-16 py-8 bg-transparent text-[#fe8181] border-[4px] border-[#fe8181] hover:text-white hover:border-white active:bg-[#fe8181]/20 transition-all ${
+              !hasDesign ? 'opacity-30 cursor-not-allowed' : ''
+            }`}
+          >
+            BUY NOW - $29.99
+          </button>
+        </div>
       ) : (
         <SizeSelector onClose={() => setShowSizeSelector(false)} />
       )}

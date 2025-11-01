@@ -4,7 +4,11 @@ import { useDesignStore } from '@/store/designStore'
 import { useEffect, useRef, useMemo } from 'react'
 import { asciiToSvg } from '@/lib/asciiConverter'
 
-export function TShirtPreview() {
+interface TShirtPreviewProps {
+  canvasBackgroundColor?: string
+}
+
+export function TShirtPreview({ canvasBackgroundColor }: TShirtPreviewProps) {
   const theme = useDesignStore((state) => state.theme)
   const mode = useDesignStore((state) => state.mode)
   const text = useDesignStore((state) => state.text)
@@ -36,8 +40,8 @@ export function TShirtPreview() {
   const asciiSvg = useMemo(() => {
     if (mode !== 'ascii' || !asciiArt) return null
     
-    const foregroundColor = theme === 'black' ? '#FFFFFF' : '#000000'
-    const backgroundColor = theme === 'black' ? '#000000' : '#FFFFFF'
+  const foregroundColor = theme === 'black' ? '#FFFFFF' : '#000000'
+  const backgroundColor = theme === 'black' ? '#121215' : '#FFFFFF'
     
     // Calculate the maximum font size that fits all content in print area
     const lines = asciiArt.split('\n')
@@ -96,8 +100,12 @@ export function TShirtPreview() {
     // Enable pixelated rendering - disable smoothing
     ctx.imageSmoothingEnabled = false
     
-    // Clear canvas
-    ctx.fillStyle = theme === 'black' ? '#000000' : '#FFFFFF'
+    // Clear canvas - use the provided background color or default to scrollable panel color
+    if (theme === 'white') {
+      ctx.fillStyle = '#FFFFFF'
+    } else {
+      ctx.fillStyle = canvasBackgroundColor || '#18181b'
+    }
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     
     // Draw design based on mode
@@ -587,8 +595,8 @@ export function TShirtPreview() {
       </div>
       
       {(!text && !asciiArt) && (
-        <p className="text-center mt-6 opacity-70 text-[10px] leading-relaxed">
-          {mode === 'text' ? 'Enter text above to see preview' : 'Upload an image to see preview'}
+        <p className="text-center mt-6 opacity-70 text-[12px] leading-relaxed">
+          {mode === 'text' ? 'Enter text to see preview' : 'Upload an image to see preview'}
         </p>
       )}
     </div>

@@ -97,7 +97,7 @@
   }
   
   body {
-    font-family: 'Press Start 2P', monospace;
+    font-family: 'JetBrains Mono', monospace;
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
@@ -124,14 +124,14 @@
 
 @layer components {
   .retro-button {
-    @apply px-8 py-4 font-bold uppercase tracking-wider border-[6px] transition-all;
+    @apply px-8 py-4 font-bold uppercase tracking-wider border-[3px] transition-all;
     letter-spacing: 0.05em;
     -webkit-font-smoothing: none;
     -moz-osx-font-smoothing: grayscale;
     font-smooth: never;
     text-rendering: optimizeSpeed;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
     font-weight: normal;
     line-height: 1.2;
   }
@@ -177,12 +177,14 @@
   }
   
   .retro-button-black {
-    @apply bg-terminal-black text-terminal-white border-terminal-white;
+    @apply text-terminal-white border-terminal-white;
+    background-color: #18181b;
   }
   
   .retro-button-black:active,
   .retro-button-black.active {
-    @apply bg-terminal-white text-terminal-black;
+    @apply bg-terminal-accent text-terminal-black border-terminal-accent;
+    box-shadow: 0 0 12px rgba(254, 129, 129, 0.6), inset 0 0 8px rgba(254, 129, 129, 0.3);
   }
   
   .retro-button-white {
@@ -191,36 +193,55 @@
   
   .retro-button-white:active,
   .retro-button-white.active {
-    @apply bg-terminal-black text-terminal-white;
+    @apply bg-terminal-accent text-terminal-black border-terminal-accent;
+    box-shadow: 0 0 12px rgba(254, 129, 129, 0.6), inset 0 0 8px rgba(254, 129, 129, 0.3);
   }
   
   .retro-input {
-    @apply w-full px-6 py-4 font-mono text-lg border-[6px];
-    @apply focus:outline-none focus:ring-[6px];
-    font-family: 'Press Start 2P', monospace;
+    @apply w-full px-6 py-4 font-mono text-lg border-[3px];
+    @apply focus:outline-none focus:ring-[3px];
+    font-family: 'JetBrains Mono', monospace;
     letter-spacing: 0.05em;
     -webkit-font-smoothing: none;
     -moz-osx-font-smoothing: grayscale;
     font-smooth: never;
     line-height: 1.8;
     text-rendering: optimizeSpeed;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: normal;
     caret-color: transparent;
   }
   
   .retro-input-black {
-    @apply bg-terminal-black text-terminal-white border-terminal-white;
-    @apply placeholder-terminal-white/50 focus:ring-terminal-white/30;
+    @apply text-terminal-white border-terminal-white;
+    background-color: #18181b;
+    @apply placeholder-terminal-white/50 focus:ring-terminal-accent;
+    border-style: solid;
+  }
+  
+  .retro-input-black:focus {
+    box-shadow: 0 0 8px rgba(254, 129, 129, 0.5), 0 0 0 3px #fe8181, inset 0 0 6px rgba(254, 129, 129, 0.2);
+    border-color: #fe8181;
+  }
+  
+  .retro-input-black.accent-border {
+    border-color: #fe8181;
+    box-shadow: 0 0 8px rgba(254, 129, 129, 0.3), inset 0 0 4px rgba(254, 129, 129, 0.1);
   }
   
   .retro-input-white {
     @apply bg-terminal-white text-terminal-black border-terminal-black;
-    @apply placeholder-terminal-black/50 focus:ring-terminal-black/30;
+    @apply placeholder-terminal-black/50 focus:ring-terminal-accent;
+    border-style: solid;
+  }
+  
+  .retro-input-white:focus {
+    box-shadow: 0 0 8px rgba(254, 129, 129, 0.5), 0 0 0 3px #fe8181, inset 0 0 6px rgba(254, 129, 129, 0.2);
+    border-color: #fe8181;
   }
   
   .retro-panel {
-    @apply border-[6px] p-8;
+    @apply border-[3px] p-8;
     text-rendering: optimizeSpeed;
   }
   
@@ -244,7 +265,7 @@
   }
   
   .chunky-border {
-    border-width: 6px;
+    border-width: 3px;
     border-style: solid;
   }
   
@@ -266,5 +287,20 @@
   input[type="range"] {
     -webkit-font-smoothing: none;
     -moz-osx-font-smoothing: grayscale;
+  }
+  
+  .accent-glow {
+    color: #fe8181;
+    text-shadow: 0 0 8px rgba(254, 129, 129, 0.5);
+  }
+  
+  .border-t-accent-glow {
+    border-top-color: #fe8181 !important;
+    box-shadow: 0 -8px 12px rgba(254, 129, 129, 0.3) inset 0 0 0 rgba(0,0,0,0);
+  }
+  
+  .border-b-accent-glow {
+    border-bottom-color: #fe8181 !important;
+    box-shadow: 0 8px 12px rgba(254, 129, 129, 0.3) inset 0 0 0 rgba(0,0,0,0);
   }
 }

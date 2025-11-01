@@ -21,6 +21,7 @@ export function TextControls() {
   const [showCursor, setShowCursor] = useState(true)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 })
+  const [isFocused, setIsFocused] = useState(false)
   
   const inputClass = theme === 'black' ? 'retro-input-black' : 'retro-input-white'
   const buttonClass = theme === 'black' ? 'retro-button-black' : 'retro-button-white'
@@ -35,9 +36,8 @@ export function TextControls() {
   
   // Calculate cursor position based on textarea cursor position
   useEffect(() => {
-    // Small delay to ensure textarea has rendered with new text
-    const timer = setTimeout(updateCursorPosition, 0)
-    return () => clearTimeout(timer)
+    // Always update cursor position when text or font changes
+    updateCursorPosition()
   }, [text, font])
   
   // Update cursor position function
@@ -46,7 +46,8 @@ export function TextControls() {
     
     try {
       const textarea = textareaRef.current
-      const position = textarea.selectionStart || 0
+      // Get cursor position - use text length if no selection (cursor at end)
+      const position = textarea.selectionStart !== undefined ? textarea.selectionStart : text.length
       
       // Split text into lines up to cursor position
       const textBeforeCursor = text.substring(0, position)
@@ -59,15 +60,15 @@ export function TextControls() {
       if (!ctx) return
       
       // Match the exact font style used in the textarea (from globals.css)
-      // Font size: 12px, line-height: 1.8, letter-spacing: 0.05em
-      ctx.font = "12px 'Press Start 2P', monospace"
+      // Font size: 14px, line-height: 1.8, letter-spacing: 0.05em
+      ctx.font = "14px 'JetBrains Mono', monospace"
       ctx.letterSpacing = '0.05em'
       
       const textWidth = ctx.measureText(currentLineText).width
       
       // Calculate Y position based on line number
-      // Line height = 12px * 1.8 = 21.6px
-      const lineHeight = 12 * 1.8
+      // Line height = 14px * 1.8 = 25.2px
+      const lineHeight = 14 * 1.8
       const lineNumber = lines.length - 1
       
       // Calculate cursor position
@@ -186,29 +187,30 @@ export function TextControls() {
             value={text}
             onChange={(e) => {
               setText(e.target.value)
-              // Delay cursor update to ensure textarea has updated
-              setTimeout(updateCursorPosition, 0)
+              updateCursorPosition()
             }}
             onInput={updateCursorPosition}
-            onClick={() => {
-              // Force immediate update on click
-              setTimeout(updateCursorPosition, 0)
-            }}
+            onClick={updateCursorPosition}
             onKeyUp={updateCursorPosition}
             onKeyDown={updateCursorPosition}
             onMouseUp={updateCursorPosition}
             onSelect={updateCursorPosition}
-            onFocus={updateCursorPosition}
+            onFocus={() => {
+              setIsFocused(true)
+              updateCursorPosition()
+            }}
+            onBlur={() => {
+              setIsFocused(false)
+              updateCursorPosition()
+            }}
             onPaste={() => {
-              // Update cursor after paste completes and ensure it's visible
               setShowCursor(true)
-              setTimeout(() => {
-                updateCursorPosition()
-              }, 10)
+              setTimeout(updateCursorPosition, 10)
             }}
             placeholder="Type your message..."
-            className={`${inputClass} retro-input min-h-[240px] resize-none`}
+            className={`${inputClass} retro-input min-h-[240px] resize-none ${isFocused ? 'accent-border' : ''}`}
             maxLength={2000}
+            autoFocus
           />
           {showCursor && (
             <span 
@@ -223,7 +225,7 @@ export function TextControls() {
             </span>
           )}
         </div>
-        <div className="text-[8px] mt-2 opacity-70 leading-relaxed">
+        <div className="text-[10px] mt-2 opacity-70 leading-relaxed">
           {text.length}/2000 CHARACTERS
         </div>
       </div>
@@ -279,7 +281,7 @@ export function TextControls() {
               }}
               className={`retro-button ${
                 theme === 'black' ? 'retro-button-black' : 'retro-button-white'
-              } ${textSize === value ? 'active' : ''} text-[9px] py-2 px-2`}
+              } ${textSize === value ? 'active' : ''} text-[11px] py-2 px-2`}
             >
               {label}
             </button>
@@ -296,7 +298,7 @@ export function TextControls() {
               playClick()
               setTextAlign('left')
             }}
-            className={`${buttonClass} retro-button text-[10px] py-3 ${
+            className={`${buttonClass} retro-button text-[11px] py-3 ${
               textAlign === 'left' ? 'active' : ''
             }`}
           >
@@ -307,7 +309,7 @@ export function TextControls() {
               playClick()
               setTextAlign('center')
             }}
-            className={`${buttonClass} retro-button text-[10px] py-3 ${
+            className={`${buttonClass} retro-button text-[11px] py-3 ${
               textAlign === 'center' ? 'active' : ''
             }`}
           >
@@ -318,7 +320,7 @@ export function TextControls() {
               playClick()
               setTextAlign('right')
             }}
-            className={`${buttonClass} retro-button text-[10px] py-3 ${
+            className={`${buttonClass} retro-button text-[11px] py-3 ${
               textAlign === 'right' ? 'active' : ''
             }`}
           >
@@ -332,7 +334,7 @@ export function TextControls() {
         <button
           onClick={handleExportDesign}
           disabled={text.length === 0}
-          className={`${buttonClass} retro-button w-full text-[9px] py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
+          className={`${buttonClass} retro-button w-full text-[11px] py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
         >
           <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
             {/* Pixelated download arrow */}
@@ -350,7 +352,7 @@ export function TextControls() {
         <button
           onClick={handleConvertToASCII}
           disabled={text.length === 0}
-          className={`${buttonClass} retro-button w-full text-[9px] py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
+          className={`${buttonClass} retro-button w-full text-[11px] py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
         >
           <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
             {/* Pixelated grid/art icon */}

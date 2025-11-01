@@ -22,19 +22,19 @@ export function DesignControls() {
   }
   
   return (
-    <div className={`retro-panel ${panelClass}`}>
-      <h2 className="font-pressStart text-[12px] mb-6 leading-relaxed">DESIGN CONTROLS</h2>
+    <div className={`${panelClass} font-jetbrainsMono xl:retro-panel xl:border-[3px]`} style={{ backgroundColor: '#18181b' }}>
+      <h2 className="font-jetbrainsMono text-[14px] mb-6 leading-relaxed accent-glow">DESIGN CONTROLS</h2>
       
       {/* Mode Selection */}
       <div className="mb-6">
-        <label className="block font-bold mb-3 text-[10px] leading-relaxed">DESIGN MODE:</label>
+        <label className="block font-bold mb-3 text-[12px] leading-relaxed font-jetbrainsMono">DESIGN MODE:</label>
         <div className="flex gap-3">
           <button
             onClick={() => {
               playClick()
               setMode('text')
             }}
-            className={`${buttonClass} retro-button flex-1 ${
+            className={`${buttonClass} retro-button flex-1 font-jetbrainsMono ${
               mode === 'text' ? 'active' : ''
             }`}
           >
@@ -45,7 +45,7 @@ export function DesignControls() {
               playClick()
               setMode('ascii')
             }}
-            className={`${buttonClass} retro-button flex-1 ${
+            className={`${buttonClass} retro-button flex-1 font-jetbrainsMono ${
               mode === 'ascii' ? 'active' : ''
             }`}
           >
@@ -56,9 +56,6 @@ export function DesignControls() {
       
       {/* Mode-specific Controls */}
       {mode === 'text' ? <TextControls /> : <AsciiControls />}
-      
-      {/* Placement Controls */}
-      <PlacementControls />
     </div>
   )
 }

@@ -19,6 +19,8 @@ export function AsciiControls() {
   const artworkAspectRatio = useDesignStore((state) => state.artworkAspectRatio)
   const setArtworkAspectRatio = useDesignStore((state) => state.setArtworkAspectRatio)
   const soundEnabled = useDesignStore((state) => state.soundEnabled)
+  const placement = useDesignStore((state) => state.placement)
+  const setPlacement = useDesignStore((state) => state.setPlacement)
   const showAsciiTextOverlay = useDesignStore((state) => state.showAsciiTextOverlay)
   const setShowAsciiTextOverlay = useDesignStore((state) => state.setShowAsciiTextOverlay)
   const asciiTextOverlay = useDesignStore((state) => state.asciiTextOverlay)
@@ -301,7 +303,7 @@ export function AsciiControls() {
         >
           {isProcessing ? 'PROCESSING...' : uploadedImage ? 'CHANGE IMAGE' : 'SELECT IMAGE'}
         </button>
-        <p className="text-[8px] mt-2 opacity-70 leading-relaxed">
+        <p className="text-[10px] mt-2 opacity-70 leading-relaxed">
           JPG, PNG, WEBP (MAX 10MB)
         </p>
       </div>
@@ -356,7 +358,7 @@ export function AsciiControls() {
                 } ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <div className="text-[13px] font-bold">{preset.label}</div>
-                <div className={`text-[8px] font-bold style-${preset.value} tracking-tight`}>{preset.charSample.split('\n')[0]}</div>
+                <div className={`text-[10px] font-bold style-${preset.value} tracking-tight`}>{preset.charSample.split('\n')[0]}</div>
               </button>
             ))}
           </div>
@@ -384,7 +386,7 @@ export function AsciiControls() {
                   playClick()
                   setAsciiSize(value)
                 }}
-                className={`${buttonClass} retro-button text-[10px] py-3 px-2 ${asciiSize === value ? 'active' : ''}`}
+                className={`${buttonClass} retro-button text-[11px] py-3 px-2 ${asciiSize === value ? 'active' : ''}`}
               >
                 {label}
               </button>
@@ -401,7 +403,7 @@ export function AsciiControls() {
               playClick()
               setShowAsciiTextOverlay(!showAsciiTextOverlay)
             }}
-            className={`${buttonClass} retro-button w-full text-[10px] py-3 ${
+            className={`${buttonClass} retro-button w-full text-[11px] py-3 ${
               showAsciiTextOverlay ? 'active' : ''
             }`}
           >
@@ -441,7 +443,7 @@ export function AsciiControls() {
                       playClick()
                       setAsciiTextFont('pressStart')
                     }}
-                    className={`${buttonClass} retro-button text-[8px] py-3 ${
+                    className={`${buttonClass} retro-button text-[10px] py-3 ${
                       asciiTextFont === 'pressStart' ? 'active' : ''
                     }`}
                   >
@@ -452,7 +454,7 @@ export function AsciiControls() {
                       playClick()
                       setAsciiTextFont('vt323')
                     }}
-                    className={`${buttonClass} retro-button text-[8px] py-3 ${
+                    className={`${buttonClass} retro-button text-[10px] py-3 ${
                       asciiTextFont === 'vt323' ? 'active' : ''
                     }`}
                   >
@@ -463,7 +465,7 @@ export function AsciiControls() {
                       playClick()
                       setAsciiTextFont('commodore')
                     }}
-                    className={`${buttonClass} retro-button text-[8px] py-3 ${
+                    className={`${buttonClass} retro-button text-[10px] py-3 ${
                       asciiTextFont === 'commodore' ? 'active' : ''
                     }`}
                   >
@@ -521,7 +523,7 @@ export function AsciiControls() {
                       playClick()
                       setAsciiTextAlign('left')
                     }}
-                    className={`${buttonClass} retro-button text-[9px] py-2 ${
+                    className={`${buttonClass} retro-button text-[11px] py-2 ${
                       asciiTextAlign === 'left' ? 'active' : ''
                     }`}
                   >
@@ -532,7 +534,7 @@ export function AsciiControls() {
                       playClick()
                       setAsciiTextAlign('center')
                     }}
-                    className={`${buttonClass} retro-button text-[9px] py-2 ${
+                    className={`${buttonClass} retro-button text-[11px] py-2 ${
                       asciiTextAlign === 'center' ? 'active' : ''
                     }`}
                   >
@@ -543,7 +545,7 @@ export function AsciiControls() {
                       playClick()
                       setAsciiTextAlign('right')
                     }}
-                    className={`${buttonClass} retro-button text-[9px] py-2 ${
+                    className={`${buttonClass} retro-button text-[11px] py-2 ${
                       asciiTextAlign === 'right' ? 'active' : ''
                     }`}
                   >
@@ -569,7 +571,7 @@ export function AsciiControls() {
                         playClick()
                         setAsciiTextPosition(value)
                       }}
-                      className={`${buttonClass} retro-button text-[9px] py-2 ${
+                      className={`${buttonClass} retro-button text-[11px] py-2 ${
                         asciiTextPosition === value ? 'active' : ''
                       }`}
                     >
@@ -595,7 +597,7 @@ export function AsciiControls() {
                         playClick()
                         setAsciiTextBackground(value)
                       }}
-                      className={`${buttonClass} retro-button text-[9px] py-2 ${
+                      className={`${buttonClass} retro-button text-[11px] py-2 ${
                         asciiTextBackground === value ? 'active' : ''
                       }`}
                     >
@@ -614,13 +616,44 @@ export function AsciiControls() {
                     // The text overlay is already displaying as ASCII on the artwork
                     setShowAsciiTextOverlay(false)
                   }}
-                  className={`${buttonClass} retro-button w-full text-[9px] py-2 bg-opacity-75`}
+                  className={`${buttonClass} retro-button w-full text-[11px] py-2 bg-opacity-75`}
                 >
                   APPLY & CLOSE
                 </button>
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Placement */}
+      {asciiArt && (
+        <div className="mt-6">
+          <label className="block font-bold mb-3 text-[10px] leading-relaxed">PLACEMENT:</label>
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                playClick()
+                setPlacement('front')
+              }}
+              className={`${buttonClass} retro-button flex-1 ${
+                placement === 'front' ? 'active' : ''
+              }`}
+            >
+              FRONT
+            </button>
+            <button
+              onClick={() => {
+                playClick()
+                setPlacement('back')
+              }}
+              className={`${buttonClass} retro-button flex-1 ${
+                placement === 'back' ? 'active' : ''
+              }`}
+            >
+              BACK
+            </button>
+          </div>
         </div>
       )}
 
@@ -634,7 +667,7 @@ export function AsciiControls() {
                 downloadSvg(asciiSvg, 'ascii-art.svg')
               }
             }}
-            className={`${buttonClass} retro-button text-[8px] py-2`}
+            className={`${buttonClass} retro-button text-[10px] py-2`}
           >
             EXPORT SVG
           </button>
@@ -648,7 +681,7 @@ export function AsciiControls() {
                 })
               }
             }}
-            className={`${buttonClass} retro-button text-[8px] py-2`}
+            className={`${buttonClass} retro-button text-[10px] py-2`}
           >
             COPY SVG
           </button>
