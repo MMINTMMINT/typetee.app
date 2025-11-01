@@ -22,7 +22,7 @@ export function SocialIconsFooter({ className = '', iconSize = 'small', gap = 'm
   return (
     <div className={`flex items-center justify-center ${gapMap[gap]} ${className}`}>
       <a 
-        href="https://instagram.com" 
+        href="https://www.instagram.com/typetee.app" 
         target="_blank" 
         rel="noopener noreferrer" 
         className={`hover:opacity-70 transition-opacity ${sizeMap[iconSize]} flex items-center justify-center`}
@@ -31,7 +31,7 @@ export function SocialIconsFooter({ className = '', iconSize = 'small', gap = 'm
         <img src="/instagram.svg" alt="Instagram" className={`${sizeMap[iconSize]}`} />
       </a>
       <a 
-        href="https://tiktok.com" 
+        href="https://www.tiktok.com/@typetee.app" 
         target="_blank" 
         rel="noopener noreferrer" 
         className={`hover:opacity-70 transition-opacity ${sizeMap[iconSize]} flex items-center justify-center`}
@@ -40,7 +40,7 @@ export function SocialIconsFooter({ className = '', iconSize = 'small', gap = 'm
         <img src="/TikTok-Logo.svg" alt="TikTok" className={`${sizeMap[iconSize]}`} />
       </a>
       <a 
-        href="https://reddit.com" 
+        href="https://www.reddit.com/user/typeteeapp/" 
         target="_blank" 
         rel="noopener noreferrer" 
         className={`hover:opacity-70 transition-opacity ${sizeMap[iconSize]} flex items-center justify-center`}
